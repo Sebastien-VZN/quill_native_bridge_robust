@@ -3,6 +3,7 @@
 
 import "dart:ffi";
 import "package:ffi/ffi.dart";
+import "package:flutter/foundation.dart";
 import "package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart";
 import "package:quill_native_bridge_windows/src/html_cleaner.dart";
 import "package:quill_native_bridge_windows/src/html_formatter.dart";
@@ -14,21 +15,37 @@ import "package:quill_native_bridge_windows/src/html_formatter.dart";
 /// Win32 convention: check the return value first, then [GetLastError]()
 /// only when needed.
 class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
-  QuillNativeBridgeWindows() {
-    _user32 = DynamicLibrary.open("user32.dll");
-    _kernel32 = DynamicLibrary.open("kernel32.dll");
-    _bindUser32Functions();
-    _bindKernel32Functions();
-  }
-
+  /// Lazy-initialised FFI bindings. Loaded on first use rather than in the
+  /// constructor so that a failure to load a DLL does not crash the plugin
+  /// registration — the placeholder stays active and `isSupported()` returns
+  /// false for every feature, which is the safe default.
   static void registerWith() {
     QuillNativeBridgePlatform.instance = QuillNativeBridgeWindows();
   }
+
+  bool _initialized = false;
 
   // ── DLL handles ──────────────────────────────────────────────────────
 
   late final DynamicLibrary _user32;
   late final DynamicLibrary _kernel32;
+
+  /// Ensures FFI bindings are loaded. Returns `true` on success, `false` if
+  /// the DLLs could not be opened (e.g. running on a non-Windows platform).
+  bool _ensureInitialized() {
+    if (_initialized) return true;
+    try {
+      _user32 = DynamicLibrary.open("user32.dll");
+      _kernel32 = DynamicLibrary.open("kernel32.dll");
+      _bindUser32Functions();
+      _bindKernel32Functions();
+      _initialized = true;
+      return true;
+    } catch (e) {
+      debugPrint("Error _ensureInitialized $e");
+      return false;
+    }
+  }
 
   // ── User32 bindings ─────────────────────────────────────────────────
 
@@ -111,14 +128,17 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   // ── Platform interface ───────────────────────────────────────────────
 
   @override
-  Future<bool> isSupported(QuillNativeBridgeFeature feature) async => {
-    QuillNativeBridgeFeature.getClipboardHtml,
-    QuillNativeBridgeFeature.copyHtmlToClipboard,
-    QuillNativeBridgeFeature.getClipboardText,
-    QuillNativeBridgeFeature.copyTextToClipboard,
-    QuillNativeBridgeFeature.getClipboardMarkdown,
-    QuillNativeBridgeFeature.copyMarkdownToClipboard,
-  }.contains(feature);
+  Future<bool> isSupported(QuillNativeBridgeFeature feature) async {
+    if (!_ensureInitialized()) return false;
+    return {
+      QuillNativeBridgeFeature.getClipboardHtml,
+      QuillNativeBridgeFeature.copyHtmlToClipboard,
+      QuillNativeBridgeFeature.getClipboardText,
+      QuillNativeBridgeFeature.copyTextToClipboard,
+      QuillNativeBridgeFeature.getClipboardMarkdown,
+      QuillNativeBridgeFeature.copyMarkdownToClipboard,
+    }.contains(feature);
+  }
 
   // ── Clipboard HTML read ───────────────────────────────────────────────
 
@@ -130,6 +150,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Voir [Windows GetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclipboarddata)
   @override
   Future<String?> getClipboardHtml() async {
+    if (!_ensureInitialized()) return null;
     if (_openClipboard(_nullPointer) == _false) {
       assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return null;
@@ -179,6 +200,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Voir [Windows SetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setclipboarddata)
   @override
   Future<void> copyHtmlToClipboard(String html) async {
+    if (!_ensureInitialized()) return;
     if (_openClipboard(_nullPointer) == _false) {
       assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return;
@@ -247,6 +269,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Lit le texte brut du presse-papiers Windows.
   @override
   Future<String?> getClipboardText() async {
+    if (!_ensureInitialized()) return null;
     if (_openClipboard(_nullPointer) == _false) {
       return null;
     }
@@ -277,6 +300,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Copie du texte brut dans le presse-papiers Windows.
   @override
   Future<void> copyTextToClipboard(String text) async {
+    if (!_ensureInitialized()) return;
     if (_openClipboard(_nullPointer) == _false) {
       return;
     }
@@ -344,6 +368,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Le contenu est stocké en UTF-8 sans en-têtes — texte brut uniquement.
   @override
   Future<String?> getClipboardMarkdown() async {
+    if (!_ensureInitialized()) return null;
     if (_openClipboard(_nullPointer) == _false) {
       assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return null;
@@ -391,6 +416,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   /// Contrairement au HTML, pas de construction d'en-têtes — texte brut uniquement.
   @override
   Future<void> copyMarkdownToClipboard(String markdown) async {
+    if (!_ensureInitialized()) return;
     if (_openClipboard(_nullPointer) == _false) {
       assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return;
