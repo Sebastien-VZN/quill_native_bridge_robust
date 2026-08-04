@@ -94,8 +94,11 @@ jobs:
 
       - name: "Validation Formatage Swift"
         run: |
-          swift-format lint -r quill_native_bridge_ios/ios/quill_native_bridge_ios --strict
-          swift-format lint -r quill_native_bridge_macos/macos/quill_native_bridge_macos --strict
+          # Lint only hand-written Swift files — exclude Pigeon-generated .g.swift
+          find quill_native_bridge_ios/ios/quill_native_bridge_ios/Sources \
+            quill_native_bridge_macos/macos/quill_native_bridge_macos/Sources \
+            -name '*.swift' ! -name '*.g.swift' -print0 \
+            | xargs -0 swift-format lint --strict
 
   # ┌─────────────────────────────────────────────────────────┐
   # │  ÉTAPE 2 — Builds plateforme (parallèle, APRÈS validate)│
