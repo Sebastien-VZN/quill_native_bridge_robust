@@ -8,12 +8,7 @@ void main(List<String> args) {
   for (final package in packages) {
     stdout.writeln('\n━━━ Publish Dry-Run: $package ━━━');
 
-    final result = Process.runSync(
-      'flutter',
-      ['pub', 'publish', '--dry-run'],
-      workingDirectory: package,
-      runInShell: true,
-    );
+    final result = Process.runSync('flutter', ['pub', 'publish', '--dry-run'], workingDirectory: package, runInShell: true);
 
     stdout.write(result.stdout);
     stderr.write(result.stderr);

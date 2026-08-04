@@ -18,8 +18,7 @@ import "package:markdown/markdown.dart" as md;
 /// final delta = MarkdownToDelta().convert('**bold** and _italic_');
 /// ```
 class MarkdownToDelta implements md.NodeVisitor {
-  MarkdownToDelta({md.ExtensionSet? markdownDocument})
-    : _markdownDocument = markdownDocument ?? md.ExtensionSet.gitHubFlavored;
+  MarkdownToDelta({md.ExtensionSet? markdownDocument}) : _markdownDocument = markdownDocument ?? md.ExtensionSet.gitHubFlavored;
 
   final md.ExtensionSet _markdownDocument;
 
@@ -83,8 +82,7 @@ class MarkdownToDelta implements md.NodeVisitor {
       case "ol":
         _isOrderedListStack.add(true);
       case "li":
-        final isOrdered =
-            _isOrderedListStack.isNotEmpty && _isOrderedListStack.last;
+        final isOrdered = _isOrderedListStack.isNotEmpty && _isOrderedListStack.last;
         _pushAttribute({"list": isOrdered ? "ordered" : "bullet"});
       case "p":
         break;

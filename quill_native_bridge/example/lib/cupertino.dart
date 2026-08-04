@@ -2,17 +2,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-final bool usesCupertino = {
-  TargetPlatform.macOS,
-  TargetPlatform.iOS,
-}.contains(defaultTargetPlatform);
+final bool usesCupertino = {TargetPlatform.macOS, TargetPlatform.iOS}.contains(defaultTargetPlatform);
 
 class AdaptiveDialogAction extends StatelessWidget {
-  const AdaptiveDialogAction({
-    required this.onPressed,
-    required this.child,
-    super.key,
-  });
+  const AdaptiveDialogAction({required this.onPressed, required this.child, super.key});
 
   final VoidCallback? onPressed;
   final Widget child;

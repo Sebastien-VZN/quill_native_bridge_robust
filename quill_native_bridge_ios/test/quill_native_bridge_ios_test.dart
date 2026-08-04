@@ -13,34 +13,16 @@ void main() {
   group('isSupported', () {
     test('returns true for supported features', () async {
       final plugin = QuillNativeBridgeIos();
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.isIOSSimulator),
-        isTrue,
-      );
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.getClipboardHtml),
-        isTrue,
-      );
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.copyHtmlToClipboard),
-        isTrue,
-      );
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.getClipboardText),
-        isTrue,
-      );
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.copyTextToClipboard),
-        isTrue,
-      );
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.isIOSSimulator), isTrue);
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.getClipboardHtml), isTrue);
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.copyHtmlToClipboard), isTrue);
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.getClipboardText), isTrue);
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.copyTextToClipboard), isTrue);
     });
 
     test('returns false for unsupported features', () async {
       final plugin = QuillNativeBridgeIos();
-      expect(
-        await plugin.isSupported(QuillNativeBridgeFeature.isAppleSafari),
-        isFalse,
-      );
+      expect(await plugin.isSupported(QuillNativeBridgeFeature.isAppleSafari), isFalse);
     });
   });
 

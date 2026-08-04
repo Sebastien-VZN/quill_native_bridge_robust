@@ -7,8 +7,7 @@ import 'dart:async' as _i3;
 
 import 'package:mockito/mockito.dart' as _i1;
 import 'package:quill_native_bridge/quill_native_bridge.dart' as _i2;
-import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart'
-    as _i4;
+import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart' as _i4;
 
 // ignore_for_file: type=lint
 // ignore_for_file: avoid_redundant_argument_values
@@ -35,27 +34,15 @@ class MockQuillNativeBridge extends _i1.Mock implements _i2.QuillNativeBridge {
 
   @override
   _i3.Future<bool> isSupported(_i4.QuillNativeBridgeFeature? feature) =>
-      (super.noSuchMethod(
-            Invocation.method(#isSupported, [feature]),
-            returnValue: _i3.Future<bool>.value(false),
-          )
-          as _i3.Future<bool>);
+      (super.noSuchMethod(Invocation.method(#isSupported, [feature]), returnValue: _i3.Future<bool>.value(false)) as _i3.Future<bool>);
 
   @override
   _i3.Future<bool> isIOSSimulator() =>
-      (super.noSuchMethod(
-            Invocation.method(#isIOSSimulator, []),
-            returnValue: _i3.Future<bool>.value(false),
-          )
-          as _i3.Future<bool>);
+      (super.noSuchMethod(Invocation.method(#isIOSSimulator, []), returnValue: _i3.Future<bool>.value(false)) as _i3.Future<bool>);
 
   @override
   _i3.Future<String?> getClipboardHtml() =>
-      (super.noSuchMethod(
-            Invocation.method(#getClipboardHtml, []),
-            returnValue: _i3.Future<String?>.value(),
-          )
-          as _i3.Future<String?>);
+      (super.noSuchMethod(Invocation.method(#getClipboardHtml, []), returnValue: _i3.Future<String?>.value()) as _i3.Future<String?>);
 
   @override
   _i3.Future<void> copyHtmlToClipboard(String? html) =>
@@ -68,11 +55,7 @@ class MockQuillNativeBridge extends _i1.Mock implements _i2.QuillNativeBridge {
 
   @override
   _i3.Future<String?> getClipboardText() =>
-      (super.noSuchMethod(
-            Invocation.method(#getClipboardText, []),
-            returnValue: _i3.Future<String?>.value(),
-          )
-          as _i3.Future<String?>);
+      (super.noSuchMethod(Invocation.method(#getClipboardText, []), returnValue: _i3.Future<String?>.value()) as _i3.Future<String?>);
 
   @override
   _i3.Future<void> copyTextToClipboard(String? text) =>
@@ -85,11 +68,7 @@ class MockQuillNativeBridge extends _i1.Mock implements _i2.QuillNativeBridge {
 
   @override
   _i3.Future<String?> getClipboardMarkdown() =>
-      (super.noSuchMethod(
-            Invocation.method(#getClipboardMarkdown, []),
-            returnValue: _i3.Future<String?>.value(),
-          )
-          as _i3.Future<String?>);
+      (super.noSuchMethod(Invocation.method(#getClipboardMarkdown, []), returnValue: _i3.Future<String?>.value()) as _i3.Future<String?>);
 
   @override
   _i3.Future<void> copyMarkdownToClipboard(String? markdown) =>
@@ -101,10 +80,5 @@ class MockQuillNativeBridge extends _i1.Mock implements _i2.QuillNativeBridge {
           as _i3.Future<void>);
 
   @override
-  bool isAppleSafari() =>
-      (super.noSuchMethod(
-            Invocation.method(#isAppleSafari, []),
-            returnValue: false,
-          )
-          as bool);
+  bool isAppleSafari() => (super.noSuchMethod(Invocation.method(#isAppleSafari, []), returnValue: false) as bool);
 }

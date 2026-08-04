@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
       - name: "Vérification Kotlin Code Style avec Ktlint"
-        uses: ScaCap/action-ktlint@1.2.0
+        uses: ScaCap/action-ktlint@v1.9.0
         with:
           github_token: ${{ secrets.github_token }}
           reporter: github-pr-review
@@ -60,7 +60,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      SWIFT_FORMAT_VERSION: 600.0.0
+      SWIFT_FORMAT_VERSION: 603.0.0
     steps:
       - uses: actions/checkout@v6
 

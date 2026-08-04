@@ -59,44 +59,31 @@ abstract class QuillNativeBridgePlatform extends PlatformInterface {
   /// Always review the doc comment of a method before use for special notes.
   ///
   /// See also: [QuillNativeBridgeFeature]
-  Future<bool> isSupported(QuillNativeBridgeFeature feature) =>
-      throw UnimplementedError('isSupported() has not been implemented.');
+  Future<bool> isSupported(QuillNativeBridgeFeature feature) => throw UnimplementedError('isSupported() has not been implemented.');
 
   /// Checks if the app is running on [iOS Simulator](https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device).
-  Future<bool> isIOSSimulator() =>
-      throw UnimplementedError('isIOSSimulator() has not been implemented.');
+  Future<bool> isIOSSimulator() => throw UnimplementedError('isIOSSimulator() has not been implemented.');
 
   /// Returns HTML from the system clipboard.
-  Future<String?> getClipboardHtml() =>
-      throw UnimplementedError('getClipboardHtml() has not been implemented.');
+  Future<String?> getClipboardHtml() => throw UnimplementedError('getClipboardHtml() has not been implemented.');
 
   /// Copies an HTML to the system clipboard to be pasted on other apps.
-  Future<void> copyHtmlToClipboard(String html) => throw UnimplementedError(
-    'copyHtmlToClipboard() has not been implemented.',
-  );
+  Future<void> copyHtmlToClipboard(String html) => throw UnimplementedError('copyHtmlToClipboard() has not been implemented.');
 
   /// Returns plain text from the system clipboard.
-  Future<String?> getClipboardText() =>
-      throw UnimplementedError('getClipboardText() has not been implemented.');
+  Future<String?> getClipboardText() => throw UnimplementedError('getClipboardText() has not been implemented.');
 
   /// Copies plain text to the system clipboard.
-  Future<void> copyTextToClipboard(String text) => throw UnimplementedError(
-    'copyTextToClipboard() has not been implemented.',
-  );
+  Future<void> copyTextToClipboard(String text) => throw UnimplementedError('copyTextToClipboard() has not been implemented.');
 
   /// Returns Markdown from the system clipboard.
   ///
   /// On Windows, this reads the `text/markdown` clipboard format.
   /// Returns `null` if Markdown content is not available.
-  Future<String?> getClipboardMarkdown() => throw UnimplementedError(
-    'getClipboardMarkdown() has not been implemented.',
-  );
+  Future<String?> getClipboardMarkdown() => throw UnimplementedError('getClipboardMarkdown() has not been implemented.');
 
   /// Copies Markdown text to the system clipboard in the `text/markdown` format.
-  Future<void> copyMarkdownToClipboard(String markdown) =>
-      throw UnimplementedError(
-        'copyMarkdownToClipboard() has not been implemented.',
-      );
+  Future<void> copyMarkdownToClipboard(String markdown) => throw UnimplementedError('copyMarkdownToClipboard() has not been implemented.');
 
   /// Returns whether the current browser is Safari on the web.
   bool isAppleSafari() => false;

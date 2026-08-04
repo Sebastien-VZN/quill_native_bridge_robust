@@ -11,8 +11,7 @@ class ImageSaver {
 
   static const String picturesDirectoryName = 'Pictures';
 
-  String? get userHome =>
-      EnvironmentProvider.instance.environment[linuxUserHomeEnvKey];
+  String? get userHome => EnvironmentProvider.instance.environment[linuxUserHomeEnvKey];
 
   String? get picturesDirectoryPath {
     final userHome = this.userHome;

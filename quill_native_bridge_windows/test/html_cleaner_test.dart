@@ -23,9 +23,7 @@ EndFragment:0000000598
 </body>
 </html>
 ''';
-      final strippedHtml = stripWindowsHtmlDescriptionHeaders(
-        windowsClipboardHtmlExample,
-      );
+      final strippedHtml = stripWindowsHtmlDescriptionHeaders(windowsClipboardHtmlExample);
       expect(strippedHtml, expectedHtml);
       expect(strippedHtml.trim(), startsWith('<html>'));
       expect(strippedHtml.trim(), endsWith('</html>'));

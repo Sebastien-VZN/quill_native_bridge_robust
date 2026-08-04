@@ -52,70 +52,28 @@ void main() {
     test('clipboard features report support correctly', () async {
       // On Linux/Windows, clipboard features should be supported
       // On unknown platforms, they should return false (not throw)
-      final htmlReadSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardHtml,
-      );
-      final htmlWriteSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyHtmlToClipboard,
-      );
-      final textReadSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardText,
-      );
-      final textWriteSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyTextToClipboard,
-      );
+      final htmlReadSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardHtml);
+      final htmlWriteSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyHtmlToClipboard);
+      final textReadSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardText);
+      final textWriteSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyTextToClipboard);
 
-      if (!kIsWeb &&
-          (defaultTargetPlatform == TargetPlatform.linux ||
-              defaultTargetPlatform == TargetPlatform.windows)) {
+      if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.linux || defaultTargetPlatform == TargetPlatform.windows)) {
         // Linux and Windows support all clipboard features
-        expect(
-          htmlReadSupported,
-          isTrue,
-          reason:
-              'getClipboardHtml should be supported on ${defaultTargetPlatform.name}',
-        );
-        expect(
-          htmlWriteSupported,
-          isTrue,
-          reason:
-              'copyHtmlToClipboard should be supported on ${defaultTargetPlatform.name}',
-        );
-        expect(
-          textReadSupported,
-          isTrue,
-          reason:
-              'getClipboardText should be supported on ${defaultTargetPlatform.name}',
-        );
-        expect(
-          textWriteSupported,
-          isTrue,
-          reason:
-              'copyTextToClipboard should be supported on ${defaultTargetPlatform.name}',
-        );
+        expect(htmlReadSupported, isTrue, reason: 'getClipboardHtml should be supported on ${defaultTargetPlatform.name}');
+        expect(htmlWriteSupported, isTrue, reason: 'copyHtmlToClipboard should be supported on ${defaultTargetPlatform.name}');
+        expect(textReadSupported, isTrue, reason: 'getClipboardText should be supported on ${defaultTargetPlatform.name}');
+        expect(textWriteSupported, isTrue, reason: 'copyTextToClipboard should be supported on ${defaultTargetPlatform.name}');
       }
     });
 
     test('markdown features report support correctly', () async {
-      final mdReadSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardMarkdown,
-      );
-      final mdWriteSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyMarkdownToClipboard,
-      );
+      final mdReadSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardMarkdown);
+      final mdWriteSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyMarkdownToClipboard);
 
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.windows) {
         // Windows supports text/markdown clipboard format
-        expect(
-          mdReadSupported,
-          isTrue,
-          reason: 'getClipboardMarkdown should be supported on Windows',
-        );
-        expect(
-          mdWriteSupported,
-          isTrue,
-          reason: 'copyMarkdownToClipboard should be supported on Windows',
-        );
+        expect(mdReadSupported, isTrue, reason: 'getClipboardMarkdown should be supported on Windows');
+        expect(mdWriteSupported, isTrue, reason: 'copyMarkdownToClipboard should be supported on Windows');
       }
 
       // On ALL platforms, isSupported must return a bool (never throw)
@@ -124,88 +82,54 @@ void main() {
     });
 
     test('isIOSSimulator reports support correctly', () async {
-      final supported = await bridge.isSupported(
-        QuillNativeBridgeFeature.isIOSSimulator,
-      );
+      final supported = await bridge.isSupported(QuillNativeBridgeFeature.isIOSSimulator);
       if (defaultTargetPlatform != TargetPlatform.iOS) {
-        expect(
-          supported,
-          isFalse,
-          reason: 'isIOSSimulator should not be supported on non-iOS',
-        );
+        expect(supported, isFalse, reason: 'isIOSSimulator should not be supported on non-iOS');
       }
     });
 
     test('isAppleSafari reports support correctly', () async {
-      final supported = await bridge.isSupported(
-        QuillNativeBridgeFeature.isAppleSafari,
-      );
+      final supported = await bridge.isSupported(QuillNativeBridgeFeature.isAppleSafari);
       if (!kIsWeb) {
-        expect(
-          supported,
-          isFalse,
-          reason: 'isAppleSafari should not be supported on native platforms',
-        );
+        expect(supported, isFalse, reason: 'isAppleSafari should not be supported on native platforms');
       }
     });
   });
 
   group('Clipboard read/write integration', () {
     test('copyTextToClipboard and getClipboardText round-trip', () async {
-      final textSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyTextToClipboard,
-      );
+      final textSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyTextToClipboard);
       if (!textSupported) {
         // Skip on platforms that don't support it
-        debugPrint(
-          'Skipping: copyTextToClipboard not supported on this platform',
-        );
+        debugPrint('Skipping: copyTextToClipboard not supported on this platform');
         return;
       }
 
       const testText = 'Hello Quill Native Bridge! 纯文本测试 🎉';
       await bridge.copyTextToClipboard(testText);
 
-      final readSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardText,
-      );
+      final readSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardText);
       if (readSupported) {
         final result = await bridge.getClipboardText();
-        expect(
-          result,
-          isNotNull,
-          reason:
-              'getClipboardText should return non-null after copyTextToClipboard',
-        );
+        expect(result, isNotNull, reason: 'getClipboardText should return non-null after copyTextToClipboard');
         expect(result, equals(testText));
       }
     });
 
     test('copyHtmlToClipboard and getClipboardHtml round-trip', () async {
-      final htmlWriteSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyHtmlToClipboard,
-      );
+      final htmlWriteSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyHtmlToClipboard);
       if (!htmlWriteSupported) {
-        debugPrint(
-          'Skipping: copyHtmlToClipboard not supported on this platform',
-        );
+        debugPrint('Skipping: copyHtmlToClipboard not supported on this platform');
         return;
       }
 
       const testHtml = '<strong>Bold</strong> <em>Italic</em>';
       await bridge.copyHtmlToClipboard(testHtml);
 
-      final htmlReadSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardHtml,
-      );
+      final htmlReadSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardHtml);
       if (htmlReadSupported) {
         final result = await bridge.getClipboardHtml();
-        expect(
-          result,
-          isNotNull,
-          reason:
-              'getClipboardHtml should return non-null after copyHtmlToClipboard',
-        );
+        expect(result, isNotNull, reason: 'getClipboardHtml should return non-null after copyHtmlToClipboard');
         // The result may have platform-specific headers (e.g. Windows HTML Format)
         // but must contain the original content.
         expect(result!.contains('Bold'), isTrue);
@@ -214,30 +138,19 @@ void main() {
     });
 
     test('copyMarkdownToClipboard and getClipboardMarkdown round-trip', () async {
-      final mdWriteSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.copyMarkdownToClipboard,
-      );
+      final mdWriteSupported = await bridge.isSupported(QuillNativeBridgeFeature.copyMarkdownToClipboard);
       if (!mdWriteSupported) {
-        debugPrint(
-          'Skipping: copyMarkdownToClipboard not supported on this platform',
-        );
+        debugPrint('Skipping: copyMarkdownToClipboard not supported on this platform');
         return;
       }
 
       const testMarkdown = '# Hello\n\n**bold** and *italic*';
       await bridge.copyMarkdownToClipboard(testMarkdown);
 
-      final mdReadSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardMarkdown,
-      );
+      final mdReadSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardMarkdown);
       if (mdReadSupported) {
         final result = await bridge.getClipboardMarkdown();
-        expect(
-          result,
-          isNotNull,
-          reason:
-              'getClipboardMarkdown should return non-null after copyMarkdownToClipboard',
-        );
+        expect(result, isNotNull, reason: 'getClipboardMarkdown should return non-null after copyMarkdownToClipboard');
         // Markdown is stored as raw UTF-8 text without platform-specific
         // headers (unlike HTML), so the round-trip must be byte-exact.
         expect(result, equals(testMarkdown));
@@ -245,9 +158,7 @@ void main() {
     });
 
     test('getClipboardText returns null when clipboard has no text', () async {
-      final readSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardText,
-      );
+      final readSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardText);
       if (!readSupported) {
         debugPrint('Skipping: getClipboardText not supported on this platform');
         return;
@@ -261,9 +172,7 @@ void main() {
     });
 
     test('getClipboardHtml returns null or string, never throws', () async {
-      final readSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardHtml,
-      );
+      final readSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardHtml);
       if (!readSupported) {
         debugPrint('Skipping: getClipboardHtml not supported on this platform');
         return;
@@ -275,13 +184,9 @@ void main() {
     });
 
     test('getClipboardMarkdown returns null or string, never throws', () async {
-      final readSupported = await bridge.isSupported(
-        QuillNativeBridgeFeature.getClipboardMarkdown,
-      );
+      final readSupported = await bridge.isSupported(QuillNativeBridgeFeature.getClipboardMarkdown);
       if (!readSupported) {
-        debugPrint(
-          'Skipping: getClipboardMarkdown not supported on this platform',
-        );
+        debugPrint('Skipping: getClipboardMarkdown not supported on this platform');
         return;
       }
 

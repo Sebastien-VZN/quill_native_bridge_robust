@@ -24,29 +24,25 @@ class QuillNativeBridgeMacOS extends QuillNativeBridgePlatform {
   }.contains(feature);
 
   @override
-  Future<bool> isIOSSimulator() =>
-      throw UnsupportedError('isIOSSimulator() is only supported on iOS.');
+  Future<bool> isIOSSimulator() => throw UnsupportedError('isIOSSimulator() is only supported on iOS.');
 
   @override
   Future<String?> getClipboardHtml() => _hostApi.getClipboardHtml();
 
   @override
-  Future<void> copyHtmlToClipboard(String html) =>
-      _hostApi.copyHtmlToClipboard(html);
+  Future<void> copyHtmlToClipboard(String html) => _hostApi.copyHtmlToClipboard(html);
 
   @override
   Future<String?> getClipboardText() => _hostApi.getClipboardText();
 
   @override
-  Future<void> copyTextToClipboard(String text) =>
-      _hostApi.copyTextToClipboard(text);
+  Future<void> copyTextToClipboard(String text) => _hostApi.copyTextToClipboard(text);
 
   @override
   Future<String?> getClipboardMarkdown() => _hostApi.getClipboardMarkdown();
 
   @override
-  Future<void> copyMarkdownToClipboard(String markdown) =>
-      _hostApi.copyMarkdownToClipboard(markdown);
+  Future<void> copyMarkdownToClipboard(String markdown) => _hostApi.copyMarkdownToClipboard(markdown);
 
   @override
   bool isAppleSafari() => false;

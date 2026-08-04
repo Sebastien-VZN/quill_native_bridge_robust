@@ -17,10 +17,7 @@ Future<File> extractBinaryFromAsset(String assetFilePath) async {
   final extractedBinaryPath = generateTempFilePath(_getFileName(assetFilePath));
   final extractedBinaryFile = File(extractedBinaryPath);
 
-  await _copyAssetTo(
-    assetFilePath: assetFilePath,
-    destinationFile: extractedBinaryFile,
-  );
+  await _copyAssetTo(assetFilePath: assetFilePath, destinationFile: extractedBinaryFile);
   await _makeFileExecutable(extractedBinaryPath);
 
   return extractedBinaryFile;
@@ -30,13 +27,8 @@ Future<File> extractBinaryFromAsset(String assetFilePath) async {
 ///
 /// - [assetFilePath] The path of the asset file to be copied.
 /// - [destinationFile] The target path where the asset file will be copied.
-Future<void> _copyAssetTo({
-  required String assetFilePath,
-  required File destinationFile,
-}) async {
-  final assetBytes = (await rootBundle.load(
-    assetFilePath,
-  )).buffer.asUint8List();
+Future<void> _copyAssetTo({required String assetFilePath, required File destinationFile}) async {
+  final assetBytes = (await rootBundle.load(assetFilePath)).buffer.asUint8List();
 
   final parentDirectory = destinationFile.parent;
   if (!parentDirectory.existsSync()) {
@@ -50,10 +42,7 @@ Future<void> _copyAssetTo({
 ///
 /// - [filePath] The path of the file to make executable.
 Future<void> _makeFileExecutable(String filePath) async {
-  assert(
-    Platform.isLinux,
-    'Must be on Linux to add execute permissions with chmod +x.',
-  );
+  assert(Platform.isLinux, 'Must be on Linux to add execute permissions with chmod +x.');
   await Process.run('chmod', ['+x', filePath]);
 }
 

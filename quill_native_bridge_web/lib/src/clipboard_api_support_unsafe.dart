@@ -12,9 +12,7 @@ import 'package:web/web.dart';
 ///
 /// Can be `false` for some browsers (e.g. **Firefox**), fallback to
 /// Clipboard events (e.g. [paste_event](https://developer.mozilla.org/en-US/docs/Web/API/Element/paste_event)).
-bool get isClipboardApiSupported =>
-    window.navigator.getProperty('clipboard'.toJS) != null &&
-    window.navigator.hasProperty('clipboard'.toJS).toDart;
+bool get isClipboardApiSupported => window.navigator.getProperty('clipboard'.toJS) != null && window.navigator.hasProperty('clipboard'.toJS).toDart;
 
 /// Negation of [isClipboardApiSupported]
 bool get isClipbaordApiUnsupported => !isClipboardApiSupported;

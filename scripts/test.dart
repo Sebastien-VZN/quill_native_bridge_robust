@@ -8,12 +8,7 @@ void main(List<String> args) {
   for (final package in packages) {
     stdout.writeln('\n━━━ Tests: $package ━━━');
 
-    final result = Process.runSync(
-      'flutter',
-      ['test'],
-      workingDirectory: package,
-      runInShell: true,
-    );
+    final result = Process.runSync('flutter', ['test'], workingDirectory: package, runInShell: true);
 
     stdout.write(result.stdout);
     stderr.write(result.stderr);

@@ -2,8 +2,7 @@
 // Make sure to update pubspec.yaml to the new location.
 
 import 'dart:convert' show utf8;
-import 'dart:io'
-    hide exitCode; // Avoids name conflict with local "exitCode" variable
+import 'dart:io' hide exitCode; // Avoids name conflict with local "exitCode" variable
 
 import 'package:quill_native_bridge_linux/src/binary_runner.dart';
 import 'package:quill_native_bridge_linux/src/constants.dart';
@@ -45,17 +44,8 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
   /// item even if the last item is an image (as bytes).
   ///
   /// This only check the type in the clipboard selection.
-  Future<bool> _hasClipboardItemOfType({
-    required String mimeType,
-    required String xclipFilePath,
-  }) async {
-    return (await Process.run(xclipFilePath, [
-      '-selection',
-      'clipboard',
-      '-t',
-      'TARGETS',
-      '-o',
-    ])).stdout.toString().contains(mimeType);
+  Future<bool> _hasClipboardItemOfType({required String mimeType, required String xclipFilePath}) async {
+    return (await Process.run(xclipFilePath, ['-selection', 'clipboard', '-t', 'TARGETS', '-o'])).stdout.toString().contains(mimeType);
   }
 
   @override
@@ -68,33 +58,19 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
 
       // Should check if the expected type is avalaible before
       //  avaliable before getting it using: xclip -o -t TARGETS
-      final hasHtmlInClipboard = await _hasClipboardItemOfType(
-        mimeType: kHtmlMimeType,
-        xclipFilePath: xclipFile.path,
-      );
+      final hasHtmlInClipboard = await _hasClipboardItemOfType(mimeType: kHtmlMimeType, xclipFilePath: xclipFile.path);
       if (!hasHtmlInClipboard) {
         return null;
       }
-      final result = await Process.run(xclipFile.path, [
-        '-selection',
-        'clipboard',
-        '-o',
-        '-t',
-        kHtmlMimeType,
-      ]);
+      final result = await Process.run(xclipFile.path, ['-selection', 'clipboard', '-o', '-t', kHtmlMimeType]);
       if (result.exitCode == 0) {
         return (result.stdout as String?)?.trim();
       }
       final processErrorOutput = result.stderr.toString().trim();
-      if (processErrorOutput.startsWith(
-        'Error: target $kHtmlMimeType not available',
-      )) {
+      if (processErrorOutput.startsWith('Error: target $kHtmlMimeType not available')) {
         return null;
       }
-      assert(
-        false,
-        'Error retrieving the HTML to clipboard. Exit code: ${result.exitCode}\nError output: $processErrorOutput',
-      );
+      assert(false, 'Error retrieving the HTML to clipboard. Exit code: ${result.exitCode}\nError output: $processErrorOutput');
     } finally {
       await xclipFile.delete();
     }
@@ -106,23 +82,13 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
 
     try {
-      final process = await Process.start(xclipFile.path, [
-        '-selection',
-        'clipboard',
-        '-t',
-        kHtmlMimeType,
-      ]);
+      final process = await Process.start(xclipFile.path, ['-selection', 'clipboard', '-t', kHtmlMimeType]);
       process.stdin.write(html);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
-        final processErrorOutput = await process.stderr
-            .transform(utf8.decoder)
-            .join();
-        assert(
-          false,
-          'Error copying the HTML to clipboard. Exit code: $exitCode\nError output: $processErrorOutput',
-        );
+        final processErrorOutput = await process.stderr.transform(utf8.decoder).join();
+        assert(false, 'Error copying the HTML to clipboard. Exit code: $exitCode\nError output: $processErrorOutput');
       }
     } finally {
       await xclipFile.delete();
@@ -133,11 +99,7 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
   Future<String?> getClipboardText() async {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
-      final result = await Process.run(xclipFile.path, [
-        '-selection',
-        'clipboard',
-        '-o',
-      ]);
+      final result = await Process.run(xclipFile.path, ['-selection', 'clipboard', '-o']);
       if (result.exitCode == 0) {
         return (result.stdout as String?)?.trim();
       }
@@ -151,21 +113,13 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
   Future<void> copyTextToClipboard(String text) async {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
-      final process = await Process.start(xclipFile.path, [
-        '-selection',
-        'clipboard',
-      ]);
+      final process = await Process.start(xclipFile.path, ['-selection', 'clipboard']);
       process.stdin.write(text);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
-        final processErrorOutput = await process.stderr
-            .transform(utf8.decoder)
-            .join();
-        assert(
-          false,
-          'Error copying text to clipboard. Exit code: $exitCode\nError output: $processErrorOutput',
-        );
+        final processErrorOutput = await process.stderr.transform(utf8.decoder).join();
+        assert(false, 'Error copying text to clipboard. Exit code: $exitCode\nError output: $processErrorOutput');
       }
     } finally {
       await xclipFile.delete();
@@ -176,33 +130,19 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
   Future<String?> getClipboardMarkdown() async {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
-      final hasMarkdownInClipboard = await _hasClipboardItemOfType(
-        mimeType: kMarkdownMimeType,
-        xclipFilePath: xclipFile.path,
-      );
+      final hasMarkdownInClipboard = await _hasClipboardItemOfType(mimeType: kMarkdownMimeType, xclipFilePath: xclipFile.path);
       if (!hasMarkdownInClipboard) {
         return null;
       }
-      final result = await Process.run(xclipFile.path, [
-        '-selection',
-        'clipboard',
-        '-o',
-        '-t',
-        kMarkdownMimeType,
-      ]);
+      final result = await Process.run(xclipFile.path, ['-selection', 'clipboard', '-o', '-t', kMarkdownMimeType]);
       if (result.exitCode == 0) {
         return (result.stdout as String?)?.trim();
       }
       final processErrorOutput = result.stderr.toString().trim();
-      if (processErrorOutput.startsWith(
-        'Error: target $kMarkdownMimeType not available',
-      )) {
+      if (processErrorOutput.startsWith('Error: target $kMarkdownMimeType not available')) {
         return null;
       }
-      assert(
-        false,
-        'Error retrieving the Markdown from clipboard. Exit code: ${result.exitCode}\nError output: $processErrorOutput',
-      );
+      assert(false, 'Error retrieving the Markdown from clipboard. Exit code: ${result.exitCode}\nError output: $processErrorOutput');
     } finally {
       await xclipFile.delete();
     }
@@ -213,23 +153,13 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
   Future<void> copyMarkdownToClipboard(String markdown) async {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
-      final process = await Process.start(xclipFile.path, [
-        '-selection',
-        'clipboard',
-        '-t',
-        kMarkdownMimeType,
-      ]);
+      final process = await Process.start(xclipFile.path, ['-selection', 'clipboard', '-t', kMarkdownMimeType]);
       process.stdin.write(markdown);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
-        final processErrorOutput = await process.stderr
-            .transform(utf8.decoder)
-            .join();
-        assert(
-          false,
-          'Error copying Markdown to clipboard. Exit code: $exitCode\nError output: $processErrorOutput',
-        );
+        final processErrorOutput = await process.stderr.transform(utf8.decoder).join();
+        assert(false, 'Error copying Markdown to clipboard. Exit code: $exitCode\nError output: $processErrorOutput');
       }
     } finally {
       await xclipFile.delete();

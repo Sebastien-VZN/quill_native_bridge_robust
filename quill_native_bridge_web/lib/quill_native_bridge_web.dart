@@ -43,8 +43,7 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
         'Should fallback to Clipboard events.',
       );
     }
-    final clipboardItems =
-        (await window.navigator.clipboard.read().toDart).toDart;
+    final clipboardItems = (await window.navigator.clipboard.read().toDart).toDart;
     for (final item in clipboardItems) {
       if (item.types.toDart.contains(kHtmlMimeType.toJS)) {
         final html = await item.getType(kHtmlMimeType).toDart;
@@ -64,9 +63,7 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
       );
     }
     final blob = Blob([html.toJS].toJS, BlobPropertyBag(type: kHtmlMimeType));
-    final clipboardItem = ClipboardItem(
-      {kHtmlMimeType.toJS: blob}.jsify()! as JSObject,
-    );
+    final clipboardItem = ClipboardItem({kHtmlMimeType.toJS: blob}.jsify()! as JSObject);
     await window.navigator.clipboard.write([clipboardItem].toJS).toDart;
   }
 
@@ -91,8 +88,7 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
         'Should fallback to Clipboard events.',
       );
     }
-    final clipboardItems =
-        (await window.navigator.clipboard.read().toDart).toDart;
+    final clipboardItems = (await window.navigator.clipboard.read().toDart).toDart;
     for (final item in clipboardItems) {
       if (item.types.toDart.contains(kMarkdownMimeType.toJS)) {
         final markdown = await item.getType(kMarkdownMimeType).toDart;
@@ -111,13 +107,8 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
         'Should fallback to Clipboard events.',
       );
     }
-    final blob = Blob(
-      [markdown.toJS].toJS,
-      BlobPropertyBag(type: kMarkdownMimeType),
-    );
-    final clipboardItem = ClipboardItem(
-      {kMarkdownMimeType.toJS: blob}.jsify()! as JSObject,
-    );
+    final blob = Blob([markdown.toJS].toJS, BlobPropertyBag(type: kMarkdownMimeType));
+    final clipboardItem = ClipboardItem({kMarkdownMimeType.toJS: blob}.jsify()! as JSObject);
     await window.navigator.clipboard.write([clipboardItem].toJS).toDart;
   }
 

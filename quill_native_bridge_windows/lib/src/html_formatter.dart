@@ -48,17 +48,10 @@ String constructWindowsHtmlDescriptionHeaders(String html) {
   // Calcul des offsets en bytes UTF-8 (pas en caractères !)
   final templateBytes = invalidHeaderHtmlTemplate.codeUnits;
 
-  final startHtmlPos =
-      _indexOfBytes(templateBytes, _kStartHtmlTag.codeUnits) +
-      _kStartHtmlTag.length;
+  final startHtmlPos = _indexOfBytes(templateBytes, _kStartHtmlTag.codeUnits) + _kStartHtmlTag.length;
   final endHtmlPos = _indexOfBytes(templateBytes, _kEndHtmlTag.codeUnits);
-  final startFragment =
-      _indexOfBytes(templateBytes, _kStartFragmentComment.codeUnits) +
-      _kStartFragmentComment.length;
-  final endFragment = _indexOfBytes(
-    templateBytes,
-    _kEndFragmentComment.codeUnits,
-  );
+  final startFragment = _indexOfBytes(templateBytes, _kStartFragmentComment.codeUnits) + _kStartFragmentComment.length;
+  final endFragment = _indexOfBytes(templateBytes, _kEndFragmentComment.codeUnits);
 
   final result = invalidHeaderHtmlTemplate
       .replaceFirst("0001", _formatPosition(startHtmlPos))
@@ -113,9 +106,7 @@ String _extractBodyContent(String html) {
   final startBodyIndex = lowerHtml.indexOf(_kStartBodyTag);
   final endBodyIndex = lowerHtml.indexOf(_kEndBodyTag);
 
-  if (startBodyIndex != -1 &&
-      endBodyIndex != -1 &&
-      endBodyIndex > startBodyIndex) {
+  if (startBodyIndex != -1 && endBodyIndex != -1 && endBodyIndex > startBodyIndex) {
     // Les offsets sont calculés sur lowerHtml (insensible à la casse) mais
     // on extrait le contenu du HTML original pour préserver la casse réelle.
     final bodyContentStartIndex = startBodyIndex + _kStartBodyTag.length;
