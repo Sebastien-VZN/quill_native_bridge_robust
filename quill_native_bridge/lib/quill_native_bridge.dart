@@ -4,7 +4,8 @@ library;
 
 import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
 
-export 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart' show QuillNativeBridgeFeature;
+export 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart'
+    show QuillNativeBridgeFeature;
 
 export 'src/converters/html_to_delta.dart';
 export 'src/converters/markdown_to_delta.dart';
@@ -16,7 +17,8 @@ export 'src/stub_impl.dart' show QuillNativeBridgeStub;
 /// Use [QuillNativeBridge.isSupported] to check whether a feature is supported.
 class QuillNativeBridge {
   /// The platform interface that drives this plugin.
-  static QuillNativeBridgePlatform get _platform => QuillNativeBridgePlatform.instance;
+  static QuillNativeBridgePlatform get _platform =>
+      QuillNativeBridgePlatform.instance;
 
   /// Checks if the specified [feature] is supported in the current implementation.
   ///
@@ -40,7 +42,8 @@ class QuillNativeBridge {
   /// Always review the doc comment of a method before use for special notes.
   ///
   /// See also: [QuillNativeBridgeFeature]
-  Future<bool> isSupported(QuillNativeBridgeFeature feature) => _platform.isSupported(feature);
+  Future<bool> isSupported(QuillNativeBridgeFeature feature) =>
+      _platform.isSupported(feature);
 
   /// Checks if the app runs on [iOS Simulator](https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device).
   ///
@@ -62,7 +65,8 @@ class QuillNativeBridge {
   /// **Important for web**: Should fallback to [Clipboard Events](https://developer.mozilla.org/en-US/docs/Web/API/ClipboardEvent)
   /// if [Clipboard API](https://developer.mozilla.org/en-US/docs/Web/API/Clipboard_API) is unsupported,
   /// not available or restricted (the case for Firefox and Safari). See [copy_event](https://developer.mozilla.org/en-US/docs/Web/API/Element/copy_event).
-  Future<void> copyHtmlToClipboard(String html) => _platform.copyHtmlToClipboard(html);
+  Future<void> copyHtmlToClipboard(String html) =>
+      _platform.copyHtmlToClipboard(html);
 
   /// Returns plain text from the system clipboard.
   ///
@@ -70,7 +74,8 @@ class QuillNativeBridge {
   Future<String?> getClipboardText() => _platform.getClipboardText();
 
   /// Copies plain text to the system clipboard.
-  Future<void> copyTextToClipboard(String text) => _platform.copyTextToClipboard(text);
+  Future<void> copyTextToClipboard(String text) =>
+      _platform.copyTextToClipboard(text);
 
   /// Returns Markdown from the system clipboard.
   ///
@@ -79,7 +84,8 @@ class QuillNativeBridge {
   Future<String?> getClipboardMarkdown() => _platform.getClipboardMarkdown();
 
   /// Copies Markdown text to the system clipboard in the `text/markdown` format.
-  Future<void> copyMarkdownToClipboard(String markdown) => _platform.copyMarkdownToClipboard(markdown);
+  Future<void> copyMarkdownToClipboard(String markdown) =>
+      _platform.copyMarkdownToClipboard(markdown);
 
   /// Returns whether the current browser is Safari on the web.
   bool isAppleSafari() => _platform.isAppleSafari();

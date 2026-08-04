@@ -3,7 +3,8 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
-    swiftOut: 'ios/quill_native_bridge_ios/Sources/quill_native_bridge_ios/Messages.g.swift',
+    swiftOut:
+        'ios/quill_native_bridge_ios/Sources/quill_native_bridge_ios/Messages.g.swift',
     dartPackageName: 'quill_native_bridge_ios',
   ),
 )

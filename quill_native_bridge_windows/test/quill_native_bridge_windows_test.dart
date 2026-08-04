@@ -24,7 +24,10 @@ void main() {
   group('registerWith', () {
     test('does not throw and installs the Windows implementation', () {
       expect(QuillNativeBridgeWindows.registerWith, returnsNormally);
-      expect(QuillNativeBridgePlatform.instance, isA<QuillNativeBridgeWindows>());
+      expect(
+        QuillNativeBridgePlatform.instance,
+        isA<QuillNativeBridgeWindows>(),
+      );
     });
   });
 
@@ -56,12 +59,16 @@ void main() {
     }
 
     test('isIOSSimulator is not supported on Windows', () async {
-      final result = await plugin.isSupported(QuillNativeBridgeFeature.isIOSSimulator);
+      final result = await plugin.isSupported(
+        QuillNativeBridgeFeature.isIOSSimulator,
+      );
       expect(result, isFalse);
     });
 
     test('isAppleSafari is not supported on Windows', () async {
-      final result = await plugin.isSupported(QuillNativeBridgeFeature.isAppleSafari);
+      final result = await plugin.isSupported(
+        QuillNativeBridgeFeature.isAppleSafari,
+      );
       expect(result, isFalse);
     });
   });

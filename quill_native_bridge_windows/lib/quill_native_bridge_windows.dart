@@ -65,19 +65,40 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   late final int Function(Pointer<Utf16>) _registerClipboardFormatW;
 
   void _bindUser32Functions() {
-    _openClipboard = _user32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("OpenClipboard");
+    _openClipboard = _user32
+        .lookupFunction<Int32 Function(Pointer), int Function(Pointer)>(
+          "OpenClipboard",
+        );
 
-    _closeClipboard = _user32.lookupFunction<Int32 Function(), int Function()>("CloseClipboard");
+    _closeClipboard = _user32.lookupFunction<Int32 Function(), int Function()>(
+      "CloseClipboard",
+    );
 
-    _emptyClipboard = _user32.lookupFunction<Int32 Function(), int Function()>("EmptyClipboard");
+    _emptyClipboard = _user32.lookupFunction<Int32 Function(), int Function()>(
+      "EmptyClipboard",
+    );
 
-    _isClipboardFormatAvailable = _user32.lookupFunction<Int32 Function(Uint32), int Function(int)>("IsClipboardFormatAvailable");
+    _isClipboardFormatAvailable = _user32
+        .lookupFunction<Int32 Function(Uint32), int Function(int)>(
+          "IsClipboardFormatAvailable",
+        );
 
-    _getClipboardData = _user32.lookupFunction<Pointer Function(Uint32), Pointer Function(int)>("GetClipboardData");
+    _getClipboardData = _user32
+        .lookupFunction<Pointer Function(Uint32), Pointer Function(int)>(
+          "GetClipboardData",
+        );
 
-    _setClipboardData = _user32.lookupFunction<Pointer Function(Uint32, Pointer), Pointer Function(int, Pointer)>("SetClipboardData");
+    _setClipboardData = _user32
+        .lookupFunction<
+          Pointer Function(Uint32, Pointer),
+          Pointer Function(int, Pointer)
+        >("SetClipboardData");
 
-    _registerClipboardFormatW = _user32.lookupFunction<Uint32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>("RegisterClipboardFormatW");
+    _registerClipboardFormatW = _user32
+        .lookupFunction<
+          Uint32 Function(Pointer<Utf16>),
+          int Function(Pointer<Utf16>)
+        >("RegisterClipboardFormatW");
   }
 
   // ── Kernel32 bindings ────────────────────────────────────────────────
@@ -89,19 +110,34 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   late final int Function() _getLastError;
 
   void _bindKernel32Functions() {
-    _globalAlloc = _kernel32.lookupFunction<Pointer Function(Uint32, IntPtr), Pointer Function(int, int)>("GlobalAlloc");
+    _globalAlloc = _kernel32
+        .lookupFunction<
+          Pointer Function(Uint32, IntPtr),
+          Pointer Function(int, int)
+        >("GlobalAlloc");
 
-    _globalFree = _kernel32.lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>("GlobalFree");
+    _globalFree = _kernel32
+        .lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>(
+          "GlobalFree",
+        );
 
-    _globalLock = _kernel32.lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>("GlobalLock");
+    _globalLock = _kernel32
+        .lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>(
+          "GlobalLock",
+        );
 
-    _globalUnlock = _kernel32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("GlobalUnlock");
+    _globalUnlock = _kernel32
+        .lookupFunction<Int32 Function(Pointer), int Function(Pointer)>(
+          "GlobalUnlock",
+        );
 
     // GetLastError is exported by kernel32.dll, NOT user32.dll. Looking it
     // up in user32 fails with ERROR_PROC_NOT_FOUND (127), which silently
     // broke _ensureInitialized() and disabled every clipboard feature on
     // Windows.
-    _getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>("GetLastError");
+    _getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>(
+      "GetLastError",
+    );
   }
 
   // ── Win32 constants ──────────────────────────────────────────────────
@@ -163,7 +199,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   Future<String?> getClipboardHtml() async {
     if (!_ensureInitialized()) return null;
     if (_openClipboard(_nullPointer) == _false) {
-      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      assert(
+        false,
+        "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}",
+      );
       return null;
     }
 
@@ -180,18 +219,26 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
 
       final clipboardDataHandle = _getClipboardData(htmlFormatId);
       if (clipboardDataHandle == _nullPointer) {
-        assert(false, "Échec de lecture du clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de lecture du clipboard. Erreur: ${_getLastError()}",
+        );
         return null;
       }
 
       final lockedPointer = _globalLock(clipboardDataHandle);
       if (lockedPointer == _nullPointer) {
-        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}",
+        );
         return null;
       }
 
       try {
-        final windowsHtmlWithMetadata = lockedPointer.cast<Utf8>().toDartString();
+        final windowsHtmlWithMetadata = lockedPointer
+            .cast<Utf8>()
+            .toDartString();
         return stripWindowsHtmlDescriptionHeaders(windowsHtmlWithMetadata);
       } finally {
         _globalUnlock(clipboardDataHandle);
@@ -213,7 +260,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   Future<void> copyHtmlToClipboard(String html) async {
     if (!_ensureInitialized()) return;
     if (_openClipboard(_nullPointer) == _false) {
-      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      assert(
+        false,
+        "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}",
+      );
       return;
     }
 
@@ -222,13 +272,19 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
 
     try {
       if (_emptyClipboard() == _false) {
-        assert(false, "Échec de vidage du clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de vidage du clipboard. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
       final htmlFormatId = _registerHtmlClipboardFormat();
       if (htmlFormatId == null) {
-        assert(false, "Échec d'enregistrement du format HTML. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'enregistrement du format HTML. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
@@ -236,14 +292,20 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
       final clipboardMemoryHandle = _globalAlloc(_gmemMoveable, htmlSize);
 
       if (clipboardMemoryHandle == _nullPointer) {
-        assert(false, "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
       final lockedPointer = _globalLock(clipboardMemoryHandle);
       if (lockedPointer == _nullPointer) {
         _globalFree(clipboardMemoryHandle);
-        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
@@ -264,7 +326,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
       if (result == _nullPointer) {
         // Échec de SetClipboardData — on doit libérer la mémoire nous-mêmes
         _globalFree(clipboardMemoryHandle);
-        assert(false, "Échec d'écriture dans le clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'écriture dans le clipboard. Erreur: ${_getLastError()}",
+        );
       }
       // Si SetClipboardData a réussi, Windows possède la mémoire — NE PAS libérer
     } finally {
@@ -381,7 +446,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   Future<String?> getClipboardMarkdown() async {
     if (!_ensureInitialized()) return null;
     if (_openClipboard(_nullPointer) == _false) {
-      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      assert(
+        false,
+        "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}",
+      );
       return null;
     }
 
@@ -398,13 +466,19 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
 
       final clipboardDataHandle = _getClipboardData(markdownFormatId);
       if (clipboardDataHandle == _nullPointer) {
-        assert(false, "Échec de lecture du clipboard Markdown. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de lecture du clipboard Markdown. Erreur: ${_getLastError()}",
+        );
         return null;
       }
 
       final lockedPointer = _globalLock(clipboardDataHandle);
       if (lockedPointer == _nullPointer) {
-        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}",
+        );
         return null;
       }
 
@@ -429,7 +503,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   Future<void> copyMarkdownToClipboard(String markdown) async {
     if (!_ensureInitialized()) return;
     if (_openClipboard(_nullPointer) == _false) {
-      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      assert(
+        false,
+        "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}",
+      );
       return;
     }
 
@@ -437,13 +514,19 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
 
     try {
       if (_emptyClipboard() == _false) {
-        assert(false, "Échec de vidage du clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de vidage du clipboard. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
       final markdownFormatId = _registerMarkdownClipboardFormat();
       if (markdownFormatId == null) {
-        assert(false, "Échec d'enregistrement du format Markdown. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'enregistrement du format Markdown. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
@@ -451,14 +534,20 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
       final clipboardMemoryHandle = _globalAlloc(_gmemMoveable, markdownSize);
 
       if (clipboardMemoryHandle == _nullPointer) {
-        assert(false, "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
       final lockedPointer = _globalLock(clipboardMemoryHandle);
       if (lockedPointer == _nullPointer) {
         _globalFree(clipboardMemoryHandle);
-        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}",
+        );
         return;
       }
 
@@ -479,7 +568,10 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
       if (result == _nullPointer) {
         // Échec de SetClipboardData — on doit libérer la mémoire nous-mêmes
         _globalFree(clipboardMemoryHandle);
-        assert(false, "Échec d'écriture Markdown dans le clipboard. Erreur: ${_getLastError()}");
+        assert(
+          false,
+          "Échec d'écriture Markdown dans le clipboard. Erreur: ${_getLastError()}",
+        );
       }
       // Si SetClipboardData a réussi, Windows possède la mémoire — NE PAS libérer
     } finally {

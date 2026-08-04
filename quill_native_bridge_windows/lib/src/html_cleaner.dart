@@ -7,7 +7,15 @@
 // Voir [HTML Clipboard Format](https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format)
 
 /// Noms des clés d'en-tête du format clipboard HTML Windows.
-const _kWindowsDescriptionHeaders = {"Version", "StartHTML", "EndHTML", "StartFragment", "EndFragment", "StartSelection", "EndSelection"};
+const _kWindowsDescriptionHeaders = {
+  "Version",
+  "StartHTML",
+  "EndHTML",
+  "StartFragment",
+  "EndFragment",
+  "StartSelection",
+  "EndSelection",
+};
 
 /// Supprime les en-têtes de description Windows du HTML du clipboard.
 ///
@@ -45,7 +53,9 @@ String stripWindowsHtmlDescriptionHeaders(String html) {
       break;
     }
 
-    final isWindowsHeader = _kWindowsDescriptionHeaders.any((metadataKey) => line.startsWith("$metadataKey:"));
+    final isWindowsHeader = _kWindowsDescriptionHeaders.any(
+      (metadataKey) => line.startsWith("$metadataKey:"),
+    );
     if (!isWindowsHeader) {
       cleanedLines.add(line);
     }

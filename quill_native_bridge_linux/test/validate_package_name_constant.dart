@@ -9,7 +9,9 @@ void main() {
     const pubspecYamlFileName = 'pubspec.yaml';
     final pubspecYamlFile = File(pubspecYamlFileName);
     if (!pubspecYamlFile.existsSync()) {
-      fail("The '$pubspecYamlFileName' file doesn't exist. Run the test from the package root directory.");
+      fail(
+        "The '$pubspecYamlFileName' file doesn't exist. Run the test from the package root directory.",
+      );
     }
     final pubspecYaml = loadYaml(pubspecYamlFile.readAsStringSync()) as YamlMap;
     final pubspecYamlPackageName = pubspecYaml['name'] as String?;

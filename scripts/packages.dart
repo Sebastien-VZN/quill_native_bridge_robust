@@ -1,5 +1,6 @@
 const packages = [
   'quill_native_bridge',
+  'quill_native_bridge/example',
   'quill_native_bridge_platform_interface',
   'quill_native_bridge_android',
   'quill_native_bridge_ios',

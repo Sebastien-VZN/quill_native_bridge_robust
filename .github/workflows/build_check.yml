@@ -1,0 +1,309 @@
+name: Build Check & Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  # ┌─────────────────────────────────────────────────────────┐
+  # │  ÉTAPE 1 — Barrière de qualité                          │
+  # │  Format + Analyze + Tests unitaires + Publish dry-run   │
+  # │  Si UN test échoue, les builds ne démarrent JAMAIS.     │
+  # └─────────────────────────────────────────────────────────┘
+  validate:
+    name: "📋 Analyse, Formatage & Tests Unitaires"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: "Initialisation des dépendances (workspace)"
+        run: dart ./scripts/pub_get.dart
+
+      - name: "Initialisation des dépendances (example)"
+        run: flutter pub get -C quill_native_bridge/example
+
+      - name: "Vérification Formatage (150 colonnes)"
+        run: dart format -l 150 --output=none --set-exit-if-changed .
+
+      - name: "Analyse Statique (Linter)"
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings .
+
+      - name: "Exécution des Tests Unitaires"
+        run: dart ./scripts/test.dart
+
+      - name: "Vérification Publish Dry-Run"
+        run: dart ./scripts/publish_dry_run.dart
+
+  # ┌─────────────────────────────────────────────────────────┐
+  # │  Lint parallèle à validate (pas bloquant pour builds)   │
+  # └─────────────────────────────────────────────────────────┘
+  ktlint:
+    name: "🎨 Ktlint (Android Kotlin)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: "Vérification Kotlin Code Style avec Ktlint"
+        uses: ScaCap/action-ktlint@1.2.0
+        with:
+          github_token: ${{ secrets.github_token }}
+          reporter: github-pr-review
+          fail_on_error: true
+
+  swift-format:
+    name: "🎨 Swift Format (iOS + macOS)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      SWIFT_FORMAT_VERSION: 600.0.0
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: "Setup Swift"
+        uses: swift-actions/setup-swift@v2
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/swift-format
+          key: swift-format-${{ runner.os }}-${{ env.SWIFT_FORMAT_VERSION }}-${{ hashFiles('**/Package.resolved') }}
+          restore-keys: |
+            swift-format-${{ runner.os }}-${{ env.SWIFT_FORMAT_VERSION }}-
+
+      - name: "Installer Swift Format"
+        run: |
+          if [ -f ~/.cache/swift-format ]; then
+            echo "Utilisation du cache Swift Format."
+            sudo cp -f ~/.cache/swift-format /usr/local/bin/swift-format
+          else
+            echo "Swift Format non caché, compilation et installation..."
+            git clone --branch $SWIFT_FORMAT_VERSION --depth 1 https://github.com/swiftlang/swift-format.git
+            cd swift-format
+            swift build --disable-sandbox -c release
+            sudo cp -f .build/release/swift-format /usr/local/bin/
+            echo "Mise en cache du binaire swift-format"
+            cp -f .build/release/swift-format ~/.cache/swift-format
+          fi
+
+      - name: "Vérifier l'installation Swift Format"
+        run: swift-format --version
+
+      - name: "Validation Formatage Swift"
+        run: |
+          swift-format lint -r quill_native_bridge_ios/ios/quill_native_bridge_ios --strict
+          swift-format lint -r quill_native_bridge_macos/macos/quill_native_bridge_macos --strict
+
+  # ┌─────────────────────────────────────────────────────────┐
+  # │  ÉTAPE 2 — Builds plateforme (parallèle, APRÈS validate)│
+  # │  Chaque build = test de compilation plateforme.         │
+  # └─────────────────────────────────────────────────────────┘
+  android-build:
+    name: "🤖 Android (APK Build)"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'corretto'
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Build APK (Release)"
+        working-directory: quill_native_bridge/example
+        run: flutter build apk --release
+      - name: "Upload APK"
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-apk
+          path: quill_native_bridge/example/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 1
+
+  linux-build:
+    name: "🐧 Linux (Build + Intégration)"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - name: "Installation Dépendances Linux"
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ninja-build libgtk-3-dev liblzma-dev libstdc++-12-dev clang cmake pkg-config xclip
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Enable Linux Desktop"
+        run: flutter config --enable-linux-desktop
+      - name: "Initialisation des dépendances (workspace)"
+        run: dart ./scripts/pub_get.dart
+      - name: "Initialisation des dépendances (example)"
+        run: flutter pub get -C quill_native_bridge/example
+      - name: "Build Linux (Release)"
+        working-directory: quill_native_bridge/example
+        run: flutter build linux --release
+      - name: "Tests d'Intégration Linux (xclip + xvfb)"
+        uses: smithki/xvfb-action@v1.1.2
+        with:
+          run: flutter test integration_test -d linux -r github
+          working-directory: quill_native_bridge/example
+      - name: "Archive Linux Build"
+        working-directory: quill_native_bridge/example/build/linux/x64/release/bundle
+        run: tar -czvf $GITHUB_WORKSPACE/quill-native-bridge-linux.tar.gz .
+      - name: "Upload Linux"
+        uses: actions/upload-artifact@v7
+        with:
+          name: linux-build
+          path: quill-native-bridge-linux.tar.gz
+          retention-days: 1
+
+  windows-build:
+    name: "🪟 Windows (Build)"
+    needs: validate
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Enable Windows Desktop"
+        run: flutter config --enable-windows-desktop
+      - name: "Build Windows (Release)"
+        working-directory: quill_native_bridge/example
+        run: flutter build windows --release
+      - name: "Archive Windows Build"
+        shell: pwsh
+        run: |
+          Compress-Archive -Path quill_native_bridge/example/build/windows/x64/runner/Release/* -DestinationPath quill-native-bridge-windows.zip
+      - name: "Upload Windows"
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-build
+          path: quill-native-bridge-windows.zip
+          retention-days: 1
+
+  web-build:
+    name: "🌐 Web (Build)"
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Build Web (Release)"
+        working-directory: quill_native_bridge/example
+        run: flutter build web --release
+      - name: "Archive Web Build"
+        working-directory: quill_native_bridge/example/build/web
+        run: zip -r $GITHUB_WORKSPACE/quill-native-bridge-web.zip .
+      - name: "Upload Web"
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-build
+          path: quill-native-bridge-web.zip
+          retention-days: 1
+
+  macos-build:
+    name: "🍎 macOS (Build)"
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Build macOS (Release)"
+        working-directory: quill_native_bridge/example
+        run: flutter build macos --release
+      - name: "Archive macOS Build"
+        working-directory: quill_native_bridge/example/build/macos/Build/Products/Release
+        run: zip -r $GITHUB_WORKSPACE/quill-native-bridge-macos.zip *.app
+      - name: "Upload macOS"
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-build
+          path: quill-native-bridge-macos.zip
+          retention-days: 1
+
+  ios-build:
+    name: "📱 iOS (Build)"
+    needs: validate
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+      - name: "Build iOS (Release, No Codesign)"
+        working-directory: quill_native_bridge/example
+        run: flutter build ios --release --no-codesign
+      - name: "Archive iOS Build"
+        working-directory: quill_native_bridge/example/build/ios/iphoneos
+        run: zip -r $GITHUB_WORKSPACE/quill-native-bridge-ios.zip Runner.app
+      - name: "Upload iOS"
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-build
+          path: quill-native-bridge-ios.zip
+          retention-days: 1
+
+  # ┌─────────────────────────────────────────────────────────┐
+  # │  ÉTAPE 3 — Release (APRÈS tous les builds + lints)      │
+  # │  Extract version → check tag → download artifacts →     │
+  # │  create GitHub release                                   │
+  # └─────────────────────────────────────────────────────────┘
+  release:
+    name: "🚀 Création de la Release GitHub"
+    needs: [android-build, linux-build, windows-build, web-build, macos-build, ios-build, ktlint, swift-format]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: "Extraire la version"
+        id: get_version
+        run: |
+          VERSION=$(grep '^version: ' quill_native_bridge/pubspec.yaml | head -1 | sed 's/version: //')
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          echo "TAG=v$VERSION" >> $GITHUB_OUTPUT
+
+      - name: "Vérifier si le tag existe déjà"
+        run: |
+          if git rev-parse "${{ steps.get_version.outputs.TAG }}" >/dev/null 2>&1; then
+            echo "::error::Le tag ${{ steps.get_version.outputs.TAG }} existe déjà. Mettez à jour la version dans pubspec.yaml."
+            exit 1
+          fi
+
+      - name: "Download Artifacts"
+        uses: actions/download-artifact@v8
+        with:
+          path: release-artifacts
+
+      - name: "Préparer les fichiers de release"
+        run: |
+          mkdir deploy
+          cp release-artifacts/android-apk/app-release.apk deploy/quill-native-bridge-android.apk
+          cp release-artifacts/linux-build/quill-native-bridge-linux.tar.gz deploy/
+          cp release-artifacts/windows-build/quill-native-bridge-windows.zip deploy/
+          cp release-artifacts/web-build/quill-native-bridge-web.zip deploy/
+          cp release-artifacts/macos-build/quill-native-bridge-macos.zip deploy/
+          cp release-artifacts/ios-build/quill-native-bridge-ios.zip deploy/
+
+      - name: "Créer la Release GitHub"
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ steps.get_version.outputs.TAG }}
+          name: Release ${{ steps.get_version.outputs.VERSION }}
+          files: deploy/*
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

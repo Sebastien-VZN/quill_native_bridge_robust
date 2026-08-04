@@ -3,7 +3,9 @@ import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
 import 'package:quill_native_bridge_platform_interface/src/placeholder_implementation.dart';
 
-class MockQuillNativeBridgePlatform with MockPlatformInterfaceMixin implements QuillNativeBridgePlatform {
+class MockQuillNativeBridgePlatform
+    with MockPlatformInterfaceMixin
+    implements QuillNativeBridgePlatform {
   @override
   Future<bool> isSupported(QuillNativeBridgeFeature feature) async => false;
 
@@ -59,7 +61,12 @@ void main() {
     test('isSupported returns false for all features', () async {
       for (final feature in QuillNativeBridgeFeature.values) {
         final result = await placeholder.isSupported(feature);
-        expect(result, isFalse, reason: '$feature should not be supported by PlaceholderImplementation');
+        expect(
+          result,
+          isFalse,
+          reason:
+              '$feature should not be supported by PlaceholderImplementation',
+        );
       }
     });
 
@@ -107,7 +114,10 @@ void main() {
   });
 
   test('getClipboardHtml()', () async {
-    expect(await QuillNativeBridgePlatform.instance.getClipboardHtml(), '<center>Invalid HTML</center>');
+    expect(
+      await QuillNativeBridgePlatform.instance.getClipboardHtml(),
+      '<center>Invalid HTML</center>',
+    );
   });
 
   test('copyHtmlToClipboard()', () async {
@@ -118,7 +128,10 @@ void main() {
   });
 
   test('getClipboardText()', () async {
-    expect(await QuillNativeBridgePlatform.instance.getClipboardText(), 'plain text');
+    expect(
+      await QuillNativeBridgePlatform.instance.getClipboardText(),
+      'plain text',
+    );
   });
 
   test('copyTextToClipboard()', () async {
@@ -129,7 +142,10 @@ void main() {
   });
 
   test('getClipboardMarkdown()', () async {
-    expect(await QuillNativeBridgePlatform.instance.getClipboardMarkdown(), '# Hello');
+    expect(
+      await QuillNativeBridgePlatform.instance.getClipboardMarkdown(),
+      '# Hello',
+    );
   });
 
   test('copyMarkdownToClipboard()', () async {

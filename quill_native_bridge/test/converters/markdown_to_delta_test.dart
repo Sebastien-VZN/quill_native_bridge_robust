@@ -11,7 +11,8 @@ void main() {
 
   Delta convert(String markdown) => converter.convert(markdown);
 
-  List<Operation> insertOps(Delta delta) => delta.toList().where((op) => op.isInsert).toList();
+  List<Operation> insertOps(Delta delta) =>
+      delta.toList().where((op) => op.isInsert).toList();
 
   test("converts bold text", () {
     final delta = convert("**bold text**");
@@ -76,7 +77,14 @@ void main() {
   test("converts link", () {
     final delta = convert("[example](https://example.com)");
     final ops = insertOps(delta);
-    expect(ops.any((op) => op.data is String && op.attributes?["link"] == "https://example.com"), isTrue);
+    expect(
+      ops.any(
+        (op) =>
+            op.data is String &&
+            op.attributes?["link"] == "https://example.com",
+      ),
+      isTrue,
+    );
   });
 
   test("converts code block", () {
@@ -87,7 +95,11 @@ void main() {
 
   test("handles empty input", () {
     final delta = convert("");
-    expect(delta.toList().isEmpty || delta.toList().every((op) => (op.data as String?)?.isEmpty == true), isTrue);
+    expect(
+      delta.toList().isEmpty ||
+          delta.toList().every((op) => (op.data as String?)?.isEmpty == true),
+      isTrue,
+    );
   });
 
   test("converts plain text without formatting", () {

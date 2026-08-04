@@ -7,4 +7,5 @@ import 'package:quill_native_bridge_linux/src/constants.dart';
 /// - [fileName] The name of the file to be stored.
 ///
 /// Returns: The path where the file will be located.
-String generateTempFilePath(String fileName) => '${Directory.systemTemp.path}/$kPackageName/$fileName';
+String generateTempFilePath(String fileName) =>
+    '${Directory.systemTemp.path}/$kPackageName/$fileName';

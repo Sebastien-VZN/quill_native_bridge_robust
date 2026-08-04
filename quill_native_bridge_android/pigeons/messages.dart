@@ -3,8 +3,11 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/messages.g.dart',
-    kotlinOut: 'android/src/main/kotlin/dev/flutterquill/quill_native_bridge/generated/GeneratedMessages.kt',
-    kotlinOptions: KotlinOptions(package: 'dev.flutterquill.quill_native_bridge.generated'),
+    kotlinOut:
+        'android/src/main/kotlin/dev/flutterquill/quill_native_bridge/generated/GeneratedMessages.kt',
+    kotlinOptions: KotlinOptions(
+      package: 'dev.flutterquill.quill_native_bridge.generated',
+    ),
     dartPackageName: 'quill_native_bridge_android',
   ),
 )
