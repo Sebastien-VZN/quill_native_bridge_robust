@@ -1,6 +1,6 @@
 name: quill_native_bridge_windows
 description: "Windows implementation of the quill_native_bridge plugin."
-version: 0.1.1
+version: 0.2.0
 homepage: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 repository: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 publish_to: none

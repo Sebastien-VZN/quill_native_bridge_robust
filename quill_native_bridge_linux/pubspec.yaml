@@ -1,6 +1,6 @@
 name: quill_native_bridge_linux
 description: "Linux implementation of the quill_native_bridge plugin."
-version: 0.0.4
+version: 0.1.0
 homepage: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 repository: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 issue_tracker: https://github.com/Sebastien-VZN/quill_native_bridge_robust/issues
