@@ -4,7 +4,7 @@ import Foundation
 class QuillNativeBridgeImpl: QuillNativeBridgeApi {
   // TODO: Should not hardcode public.html and instead use UTType.html.identifier
 
-  func getClipboardHtml(completion: @escaping (Result<String?, any Error>) -> Void) {
+  func getClipboardHtml(completion: @escaping (Result<String?, Error>) -> Void) {
     loadClipboardData(typeIdentifier: "public.html") { data in
       completion(.success(data.flatMap { String(data: $0, encoding: .utf8) }))
     }
@@ -14,16 +14,15 @@ class QuillNativeBridgeImpl: QuillNativeBridgeApi {
     UIPasteboard.general.setValue(html, forPasteboardType: "public.html")
   }
 
-  func getClipboardText(completion: @escaping (Result<String?, any Error>) -> Void) {
-    let text = UIPasteboard.general.string
-    completion(.success(text))
+  func getClipboardText() throws -> String? {
+    return UIPasteboard.general.string
   }
 
   func copyTextToClipboard(text: String) throws {
     UIPasteboard.general.string = text
   }
 
-  func getClipboardMarkdown(completion: @escaping (Result<String?, any Error>) -> Void) {
+  func getClipboardMarkdown(completion: @escaping (Result<String?, Error>) -> Void) {
     loadClipboardData(typeIdentifier: "net.daringfireball.markdown") { data in
       completion(.success(data.flatMap { String(data: $0, encoding: .utf8) }))
     }
