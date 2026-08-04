@@ -131,8 +131,9 @@ void main() {
         final result = await bridge.getClipboardHtml();
         expect(result, isNotNull, reason: 'getClipboardHtml should return non-null after copyHtmlToClipboard');
         // The result may have platform-specific headers (e.g. Windows HTML Format)
-        // but must contain the original content
+        // but must contain the original content.
         expect(result!.contains('Bold'), isTrue);
+        expect(result.contains('Italic'), isTrue);
       }
     });
 
@@ -150,7 +151,9 @@ void main() {
       if (mdReadSupported) {
         final result = await bridge.getClipboardMarkdown();
         expect(result, isNotNull, reason: 'getClipboardMarkdown should return non-null after copyMarkdownToClipboard');
-        expect(result!.contains('Hello'), isTrue);
+        // Markdown is stored as raw UTF-8 text without platform-specific
+        // headers (unlike HTML), so the round-trip must be byte-exact.
+        expect(result, equals(testMarkdown));
       }
     });
 

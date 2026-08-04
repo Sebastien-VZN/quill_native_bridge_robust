@@ -42,7 +42,12 @@ object ClipboardRichTextHandler {
         try {
             val clipboard =
                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-            val clip = ClipData.newHtmlText("HTML", html, html)
+            // ClipData.newHtmlText(label, plainText, html): the 2nd argument is
+            // the plain-text fallback shown by apps that don't understand HTML.
+            // Passing the raw HTML here would surface "<strong>...</strong>" to
+            // plain-text consumers, so we hand an empty fallback and let the
+            // platform extract text from the HTML for plain-text paste.
+            val clip = ClipData.newHtmlText("HTML", "", html)
             clipboard.setPrimaryClip(clip)
         } catch (e: Exception) {
             throw FlutterError(
@@ -120,9 +125,13 @@ object ClipboardRichTextHandler {
         try {
             val clipboard =
                 context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            // Advertise both text/markdown (for Markdown-aware apps like VS Code,
+            // Obsidian) and text/plain (so standard text fields can paste the
+            // Markdown source as plain text). Without text/plain the copied
+            // Markdown is invisible to most Android apps.
             val clip = ClipData(
-                ClipDescription("Markdown", arrayOf(MIME_TYPE_MARKDOWN)),
-                ClipData.Item(markdown)
+                ClipDescription("Markdown", arrayOf(MIME_TYPE_MARKDOWN, "text/plain")),
+                ClipData.Item(markdown),
             )
             clipboard.setPrimaryClip(clip)
         } catch (e: Exception) {

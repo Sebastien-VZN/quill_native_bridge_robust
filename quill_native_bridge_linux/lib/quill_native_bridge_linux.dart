@@ -83,7 +83,7 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
 
     try {
       final process = await Process.start(xclipFile.path, ['-selection', 'clipboard', '-t', kHtmlMimeType]);
-      process.stdin.writeln(html);
+      process.stdin.write(html);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
@@ -114,7 +114,7 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
       final process = await Process.start(xclipFile.path, ['-selection', 'clipboard']);
-      process.stdin.writeln(text);
+      process.stdin.write(text);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
@@ -154,7 +154,7 @@ class QuillNativeBridgeLinux extends QuillNativeBridgePlatform {
     final xclipFile = await extractBinaryFromAsset(kXclipAssetFile);
     try {
       final process = await Process.start(xclipFile.path, ['-selection', 'clipboard', '-t', kMarkdownMimeType]);
-      process.stdin.writeln(markdown);
+      process.stdin.write(markdown);
       await process.stdin.close();
       final exitCode = await process.exitCode;
       if (exitCode != 0) {
