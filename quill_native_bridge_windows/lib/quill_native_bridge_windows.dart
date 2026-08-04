@@ -24,6 +24,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   }
 
   bool _initialized = false;
+  bool _initFailed = false;
 
   // ── DLL handles ──────────────────────────────────────────────────────
 
@@ -31,9 +32,14 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   late final DynamicLibrary _kernel32;
 
   /// Ensures FFI bindings are loaded. Returns `true` on success, `false` if
-  /// the DLLs could not be opened (e.g. running on a non-Windows platform).
+  /// the DLLs could not be opened or a symbol lookup failed (e.g. running on
+  /// a non-Windows platform). Once the initialisation has failed it is not
+  /// retried — every public method will keep returning the safe default
+  /// (`false`/`null`/no-op) instead of re-running the failing lookup on each
+  /// call.
   bool _ensureInitialized() {
     if (_initialized) return true;
+    if (_initFailed) return false;
     try {
       _user32 = DynamicLibrary.open("user32.dll");
       _kernel32 = DynamicLibrary.open("kernel32.dll");
@@ -43,6 +49,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
       return true;
     } catch (e) {
       debugPrint("Error _ensureInitialized $e");
+      _initFailed = true;
       return false;
     }
   }
@@ -56,7 +63,6 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   late final Pointer Function(int) _getClipboardData;
   late final Pointer Function(int, Pointer) _setClipboardData;
   late final int Function(Pointer<Utf16>) _registerClipboardFormatW;
-  late final int Function() _getLastError;
 
   void _bindUser32Functions() {
     _openClipboard = _user32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("OpenClipboard");
@@ -72,8 +78,6 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
     _setClipboardData = _user32.lookupFunction<Pointer Function(Uint32, Pointer), Pointer Function(int, Pointer)>("SetClipboardData");
 
     _registerClipboardFormatW = _user32.lookupFunction<Uint32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>("RegisterClipboardFormatW");
-
-    _getLastError = _user32.lookupFunction<Uint32 Function(), int Function()>("GetLastError");
   }
 
   // ── Kernel32 bindings ────────────────────────────────────────────────
@@ -82,6 +86,7 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
   late final Pointer Function(Pointer) _globalFree;
   late final Pointer Function(Pointer) _globalLock;
   late final int Function(Pointer) _globalUnlock;
+  late final int Function() _getLastError;
 
   void _bindKernel32Functions() {
     _globalAlloc = _kernel32.lookupFunction<Pointer Function(Uint32, IntPtr), Pointer Function(int, int)>("GlobalAlloc");
@@ -91,6 +96,12 @@ class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
     _globalLock = _kernel32.lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>("GlobalLock");
 
     _globalUnlock = _kernel32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("GlobalUnlock");
+
+    // GetLastError is exported by kernel32.dll, NOT user32.dll. Looking it
+    // up in user32 fails with ERROR_PROC_NOT_FOUND (127), which silently
+    // broke _ensureInitialized() and disabled every clipboard feature on
+    // Windows.
+    _getLastError = _kernel32.lookupFunction<Uint32 Function(), int Function()>("GetLastError");
   }
 
   // ── Win32 constants ──────────────────────────────────────────────────
