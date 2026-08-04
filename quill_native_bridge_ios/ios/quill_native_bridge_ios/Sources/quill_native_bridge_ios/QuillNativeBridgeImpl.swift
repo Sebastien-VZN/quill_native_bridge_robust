@@ -23,6 +23,16 @@ class QuillNativeBridgeImpl: QuillNativeBridgeApi {
     UIPasteboard.general.string = text
   }
 
+  func getClipboardMarkdown(completion: @escaping (Result<String?, any Error>) -> Void) {
+    loadClipboardData(typeIdentifier: "net.daringfireball.markdown") { data in
+      completion(.success(data.flatMap { String(data: $0, encoding: .utf8) }))
+    }
+  }
+
+  func copyMarkdownToClipboard(markdown: String) throws {
+    UIPasteboard.general.setValue(markdown, forPasteboardType: "net.daringfireball.markdown")
+  }
+
   private func loadClipboardData(
     typeIdentifier: String, completion: @escaping (Data?) -> Void
   ) {

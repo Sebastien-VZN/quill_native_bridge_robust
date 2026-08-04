@@ -39,4 +39,10 @@ class QuillNativeBridgeIos extends QuillNativeBridgePlatform {
 
   @override
   Future<void> copyTextToClipboard(String text) => _hostApi.copyTextToClipboard(text);
+
+  @override
+  Future<String?> getClipboardMarkdown() => _hostApi.getClipboardMarkdown();
+
+  @override
+  Future<void> copyMarkdownToClipboard(String markdown) => _hostApi.copyMarkdownToClipboard(markdown);
 }

@@ -25,4 +25,16 @@ class QuillNativeBridgeImpl: QuillNativeBridgeApi {
     pasteboard.clearContents()
     pasteboard.setString(text, forType: .string)
   }
+
+  private static let markdownPasteboardType = NSPasteboard.PasteboardType("net.daringfireball.markdown")
+
+  func getClipboardMarkdown() throws -> String? {
+    return NSPasteboard.general.string(forType: markdownPasteboardType)
+  }
+
+  func copyMarkdownToClipboard(markdown: String) throws {
+    let pasteboard = NSPasteboard.general
+    pasteboard.clearContents()
+    pasteboard.setString(markdown, forType: markdownPasteboardType)
+  }
 }

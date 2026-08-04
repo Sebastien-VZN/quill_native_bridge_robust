@@ -101,6 +101,8 @@ protocol QuillNativeBridgeApi {
   func copyHtmlToClipboard(html: String) throws
   func getClipboardText() throws -> String?
   func copyTextToClipboard(text: String) throws
+  func getClipboardMarkdown() throws -> String?
+  func copyMarkdownToClipboard(markdown: String) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -164,6 +166,34 @@ class QuillNativeBridgeApiSetup {
       }
     } else {
       copyTextToClipboardChannel.setMessageHandler(nil)
+    }
+    let getClipboardMarkdownChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_macos.QuillNativeBridgeApi.getClipboardMarkdown\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      getClipboardMarkdownChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getClipboardMarkdown()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      getClipboardMarkdownChannel.setMessageHandler(nil)
+    }
+    let copyMarkdownToClipboardChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_macos.QuillNativeBridgeApi.copyMarkdownToClipboard\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    if let api = api {
+      copyMarkdownToClipboardChannel.setMessageHandler { message, reply in
+        let args = message as! [Any?]
+        let markdownArg = args[0] as! String
+        do {
+          try api.copyMarkdownToClipboard(markdown: markdownArg)
+          reply(wrapResult(nil))
+        } catch {
+          reply(wrapError(error))
+        }
+      }
+    } else {
+      copyMarkdownToClipboardChannel.setMessageHandler(nil)
     }
   }
 }

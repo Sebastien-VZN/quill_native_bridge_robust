@@ -79,6 +79,39 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
     await window.navigator.clipboard.writeText(text).toDart;
   }
 
+  @override
+  Future<String?> getClipboardMarkdown() async {
+    if (isClipbaordApiUnsupported) {
+      throw UnsupportedError(
+        'Could not retrieve Markdown from the clipboard.\n'
+        'The Clipboard API is not supported on ${window.navigator.userAgent}.\n'
+        'Should fallback to Clipboard events.',
+      );
+    }
+    final clipboardItems = (await window.navigator.clipboard.read().toDart).toDart;
+    for (final item in clipboardItems) {
+      if (item.types.toDart.contains(kMarkdownMimeType.toJS)) {
+        final markdown = await item.getType(kMarkdownMimeType).toDart;
+        return (await markdown.text().toDart).toDart;
+      }
+    }
+    return null;
+  }
+
+  @override
+  Future<void> copyMarkdownToClipboard(String markdown) async {
+    if (isClipbaordApiUnsupported) {
+      throw UnsupportedError(
+        'Could not copy Markdown to the clipboard.\n'
+        'The Clipboard API is not supported on ${window.navigator.userAgent}.\n'
+        'Should fallback to Clipboard events.',
+      );
+    }
+    final blob = Blob([markdown.toJS].toJS, BlobPropertyBag(type: kMarkdownMimeType));
+    final clipboardItem = ClipboardItem({kMarkdownMimeType.toJS: blob}.jsify()! as JSObject);
+    await window.navigator.clipboard.write([clipboardItem].toJS).toDart;
+  }
+
   // https://github.com/flutter/packages/blob/main/packages/cross_file/lib/src/web_helpers/web_helpers.dart#L35-L37
   @override
   bool isAppleSafari() => window.navigator.vendor == 'Apple Computer, Inc.';

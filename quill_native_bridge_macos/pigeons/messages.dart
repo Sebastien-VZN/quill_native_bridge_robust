@@ -16,4 +16,8 @@ abstract class QuillNativeBridgeApi {
   // Text
   String? getClipboardText();
   void copyTextToClipboard(String text);
+
+  // Markdown
+  String? getClipboardMarkdown();
+  void copyMarkdownToClipboard(String markdown);
 }
