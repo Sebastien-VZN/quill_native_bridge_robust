@@ -1,3 +1,6 @@
+@TestOn('windows')
+library;
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
 import 'package:quill_native_bridge_windows/quill_native_bridge_windows.dart';

@@ -6,6 +6,14 @@ void main(List<String> args) {
   var hasFailure = false;
 
   for (final package in packages) {
+    // Skip packages that have no test/ directory — flutter test exits 1
+    // when no tests are found, which is not a real failure.
+    final testDir = Directory('$package/test');
+    if (!testDir.existsSync()) {
+      stdout.writeln('\n━━━ Tests: $package ━━━ (skipped — no test/ directory)');
+      continue;
+    }
+
     stdout.writeln('\n━━━ Tests: $package ━━━');
 
     final result = Process.runSync('flutter', ['test'], workingDirectory: package, runInShell: true);
