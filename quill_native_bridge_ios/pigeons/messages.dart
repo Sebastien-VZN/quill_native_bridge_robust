@@ -1,33 +1,20 @@
 import 'package:pigeon/pigeon.dart';
 
-@ConfigurePigeon(PigeonOptions(
-  dartOut: 'lib/src/messages.g.dart',
-  dartTestOut: 'test/test_api.g.dart',
-  swiftOut:
-      'ios/quill_native_bridge_ios/Sources/quill_native_bridge_ios/Messages.g.swift',
-  dartPackageName: 'quill_native_bridge_ios',
-))
-@HostApi(dartHostTestHandler: 'TestQuillNativeBridgeApi')
+@ConfigurePigeon(
+  PigeonOptions(
+    dartOut: 'lib/src/messages.g.dart',
+    swiftOut: 'ios/quill_native_bridge_ios/Sources/quill_native_bridge_ios/Messages.g.swift',
+    dartPackageName: 'quill_native_bridge_ios',
+  ),
+)
+@HostApi()
 abstract class QuillNativeBridgeApi {
   // HTML
   @async
   String? getClipboardHtml();
   void copyHtmlToClipboard(String html);
 
-  // Image
-  @async
-  Uint8List? getClipboardImage();
-  void copyImageToClipboard(Uint8List imageBytes);
-  @async
-  Uint8List? getClipboardGif();
-
-  @async
-  void openGalleryApp();
-
-  @async
-  void saveImageToGallery(
-    Uint8List imageBytes, {
-    required String name,
-    required String? albumName,
-  });
+  // Text
+  String? getClipboardText();
+  void copyTextToClipboard(String text);
 }

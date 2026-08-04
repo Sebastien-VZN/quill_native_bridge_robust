@@ -1,26 +1,28 @@
 name: quill_native_bridge_ios
 description: "iOS implementation of the quill_native_bridge plugin."
-version: 0.0.3
-homepage: https://github.com/FlutterQuill/quill-native-bridge/tree/main/quill_native_bridge_ios
-repository: https://github.com/FlutterQuill/quill-native-bridge/tree/main/quill_native_bridge_ios
-issue_tracker: https://github.com/FlutterQuill/quill-native-bridge/issues?q=is%3Aissue+is%3Aopen+label%3A%22platform-ios%22
-documentation: https://github.com/FlutterQuill/quill-native-bridge/tree/main/quill_native_bridge_ios
-topics: [clipboard, os-integration, quill-native-bridge, quill, flutter-quill]
+version: 0.0.4
+homepage: https://github.com/Sebastien-VZN/quill_native_bridge_robust
+repository: https://github.com/Sebastien-VZN/quill_native_bridge_robust
+issue_tracker: https://github.com/Sebastien-VZN/quill_native_bridge_robust/issues
+publish_to: none
+resolution: workspace
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
-  flutter: '>=3.0.0'
+  sdk: ^3.12.0
+  flutter: ">=3.44.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  quill_native_bridge_platform_interface: ^0.0.1
+  quill_native_bridge_platform_interface:
+    path: ../quill_native_bridge_platform_interface
   is_ios_simulator: ^1.0.1
   meta: ^1.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  very_good_analysis: ^10.2.0
   pigeon: ^27.3.0
   mockito: ^5.4.4
   build_runner: ^2.4.13

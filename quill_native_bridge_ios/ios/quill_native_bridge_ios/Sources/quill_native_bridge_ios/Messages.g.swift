@@ -100,11 +100,8 @@ class MessagesPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable {
 protocol QuillNativeBridgeApi {
   func getClipboardHtml(completion: @escaping (Result<String?, Error>) -> Void)
   func copyHtmlToClipboard(html: String) throws
-  func getClipboardImage(completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
-  func copyImageToClipboard(imageBytes: FlutterStandardTypedData) throws
-  func getClipboardGif(completion: @escaping (Result<FlutterStandardTypedData?, Error>) -> Void)
-  func openGalleryApp(completion: @escaping (Result<Void, Error>) -> Void)
-  func saveImageToGallery(imageBytes: FlutterStandardTypedData, name: String, albumName: String?, completion: @escaping (Result<Void, Error>) -> Void)
+  func getClipboardText() throws -> String?
+  func copyTextToClipboard(text: String) throws
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
@@ -143,84 +140,33 @@ class QuillNativeBridgeApiSetup {
     } else {
       copyHtmlToClipboardChannel.setMessageHandler(nil)
     }
-    let getClipboardImageChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.getClipboardImage\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let getClipboardTextChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.getClipboardText\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      getClipboardImageChannel.setMessageHandler { _, reply in
-        api.getClipboardImage { result in
-          switch result {
-          case .success(let res):
-            reply(wrapResult(res))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
+      getClipboardTextChannel.setMessageHandler { _, reply in
+        do {
+          let result = try api.getClipboardText()
+          reply(wrapResult(result))
+        } catch {
+          reply(wrapError(error))
         }
       }
     } else {
-      getClipboardImageChannel.setMessageHandler(nil)
+      getClipboardTextChannel.setMessageHandler(nil)
     }
-    let copyImageToClipboardChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.copyImageToClipboard\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let copyTextToClipboardChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.copyTextToClipboard\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      copyImageToClipboardChannel.setMessageHandler { message, reply in
+      copyTextToClipboardChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let imageBytesArg = args[0] as! FlutterStandardTypedData
+        let textArg = args[0] as! String
         do {
-          try api.copyImageToClipboard(imageBytes: imageBytesArg)
+          try api.copyTextToClipboard(text: textArg)
           reply(wrapResult(nil))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      copyImageToClipboardChannel.setMessageHandler(nil)
-    }
-    let getClipboardGifChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.getClipboardGif\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      getClipboardGifChannel.setMessageHandler { _, reply in
-        api.getClipboardGif { result in
-          switch result {
-          case .success(let res):
-            reply(wrapResult(res))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
-        }
-      }
-    } else {
-      getClipboardGifChannel.setMessageHandler(nil)
-    }
-    let openGalleryAppChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.openGalleryApp\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      openGalleryAppChannel.setMessageHandler { _, reply in
-        api.openGalleryApp { result in
-          switch result {
-          case .success:
-            reply(wrapResult(nil))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
-        }
-      }
-    } else {
-      openGalleryAppChannel.setMessageHandler(nil)
-    }
-    let saveImageToGalleryChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.quill_native_bridge_ios.QuillNativeBridgeApi.saveImageToGallery\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
-    if let api = api {
-      saveImageToGalleryChannel.setMessageHandler { message, reply in
-        let args = message as! [Any?]
-        let imageBytesArg = args[0] as! FlutterStandardTypedData
-        let nameArg = args[1] as! String
-        let albumNameArg: String? = nilOrValue(args[2])
-        api.saveImageToGallery(imageBytes: imageBytesArg, name: nameArg, albumName: albumNameArg) { result in
-          switch result {
-          case .success:
-            reply(wrapResult(nil))
-          case .failure(let error):
-            reply(wrapError(error))
-          }
-        }
-      }
-    } else {
-      saveImageToGalleryChannel.setMessageHandler(nil)
+      copyTextToClipboardChannel.setMessageHandler(nil)
     }
   }
 }

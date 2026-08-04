@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
 
 class QuillNativeBridgeStub extends QuillNativeBridgePlatform {
@@ -16,12 +14,12 @@ class QuillNativeBridgeStub extends QuillNativeBridgePlatform {
   }
 
   @override
-  Future<Uint8List?> getClipboardImage() async {
+  Future<String?> getClipboardText() async {
     return null;
   }
 
   @override
-  Future<List<String>> getClipboardFiles() async {
-    return [];
+  Future<String?> getClipboardMarkdown() async {
+    return null;
   }
 }

@@ -1,4 +1,3 @@
-// TODO: Use Pub workspaces once the min Dart version is 3.5: https://dart.dev/tools/pub/workspaces
 const packages = [
   'quill_native_bridge',
   'quill_native_bridge_platform_interface',

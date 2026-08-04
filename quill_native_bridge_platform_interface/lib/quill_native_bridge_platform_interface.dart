@@ -1,14 +1,9 @@
-import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:plugin_platform_interface/plugin_platform_interface.dart';
 
-import 'src/placeholder_implementation.dart';
-import 'src/platform_feature.dart';
-import 'src/types/image_save_options.dart';
-import 'src/types/image_save_result.dart';
+import 'package:quill_native_bridge_platform_interface/src/placeholder_implementation.dart';
+import 'package:quill_native_bridge_platform_interface/src/platform_feature.dart';
 
 export 'src/platform_feature.dart';
-export 'src/types/image_save_options.dart';
-export 'src/types/image_save_result.dart';
 
 /// Platform implementations should extend this class rather than implement it
 /// as newly added methods are not considered to be breaking
@@ -64,64 +59,31 @@ abstract class QuillNativeBridgePlatform extends PlatformInterface {
   /// Always review the doc comment of a method before use for special notes.
   ///
   /// See also: [QuillNativeBridgeFeature]
-  Future<bool> isSupported(QuillNativeBridgeFeature feature) =>
-      throw UnimplementedError('isSupported() has not been implemented.');
+  Future<bool> isSupported(QuillNativeBridgeFeature feature) => throw UnimplementedError('isSupported() has not been implemented.');
 
   /// Checks if the app is running on [iOS Simulator](https://developer.apple.com/documentation/xcode/running-your-app-in-simulator-or-on-a-device).
-  Future<bool> isIOSSimulator() =>
-      throw UnimplementedError('isIOSSimulator() has not been implemented.');
+  Future<bool> isIOSSimulator() => throw UnimplementedError('isIOSSimulator() has not been implemented.');
 
   /// Returns HTML from the system clipboard.
-  Future<String?> getClipboardHtml() =>
-      throw UnimplementedError('getClipboardHtml() has not been implemented.');
+  Future<String?> getClipboardHtml() => throw UnimplementedError('getClipboardHtml() has not been implemented.');
 
   /// Copies an HTML to the system clipboard to be pasted on other apps.
-  Future<void> copyHtmlToClipboard(String html) => throw UnimplementedError(
-      'copyHtmlToClipboard() has not been implemented.');
+  Future<void> copyHtmlToClipboard(String html) => throw UnimplementedError('copyHtmlToClipboard() has not been implemented.');
 
-  /// Copies an image to the system clipboard to be pasted on other apps.
-  Future<void> copyImageToClipboard(Uint8List imageBytes) =>
-      throw UnimplementedError(
-        'copyImageToClipboard() has not been implemented.',
-      );
+  /// Returns plain text from the system clipboard.
+  Future<String?> getClipboardText() => throw UnimplementedError('getClipboardText() has not been implemented.');
 
-  /// Returns the copied image from the system clipboard.
-  Future<Uint8List?> getClipboardImage() =>
-      throw UnimplementedError('getClipboardImage() has not been implemented.');
+  /// Copies plain text to the system clipboard.
+  Future<void> copyTextToClipboard(String text) => throw UnimplementedError('copyTextToClipboard() has not been implemented.');
 
-  /// Returns the copied GIF from the system clipboard.
-  Future<Uint8List?> getClipboardGif() =>
-      throw UnimplementedError('getClipboardGif() has not been implemented.');
-
-  /// Returns the file paths from the system clipboard.
-  Future<List<String>> getClipboardFiles() =>
-      throw UnimplementedError('getClipboardFiles() has not been implemented.');
-
-  /// Opens the system gallery app.
-  Future<void> openGalleryApp() => throw UnimplementedError(
-        'openGalleryApp() has not been implemented.',
-      );
-
-  /// Saves an image to the gallery app.
-  Future<void> saveImageToGallery(
-    Uint8List imageBytes, {
-    required GalleryImageSaveOptions options,
-  }) =>
-      throw UnimplementedError(
-        'saveImageToGallery() has not been implemented.',
-      );
-
-  /// Saves an image to the device.
+  /// Returns Markdown from the system clipboard.
   ///
-  /// Returns [ImageSaveResult] with `null` to [ImageSaveResult.filePath]
-  /// if the operation was canceled and always `null` on web platforms.
-  Future<ImageSaveResult> saveImage(
-    Uint8List imageBytes, {
-    required ImageSaveOptions options,
-  }) =>
-      throw UnimplementedError(
-        'saveImage() has not been implemented.',
-      );
+  /// On Windows, this reads the `text/markdown` clipboard format.
+  /// Returns `null` if Markdown content is not available.
+  Future<String?> getClipboardMarkdown() => throw UnimplementedError('getClipboardMarkdown() has not been implemented.');
+
+  /// Copies Markdown text to the system clipboard in the `text/markdown` format.
+  Future<void> copyMarkdownToClipboard(String markdown) => throw UnimplementedError('copyMarkdownToClipboard() has not been implemented.');
 
   /// Returns whether the current browser is Safari on the web.
   bool isAppleSafari() => false;

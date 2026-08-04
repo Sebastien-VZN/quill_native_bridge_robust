@@ -52,4 +52,85 @@ object ClipboardRichTextHandler {
             )
         }
     }
+
+    fun getClipboardText(context: Context): String? {
+        val clipboard =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        if (!clipboard.hasPrimaryClip()) {
+            return null
+        }
+
+        val primaryClipData = clipboard.primaryClip
+
+        if (primaryClipData == null || primaryClipData.itemCount == 0) {
+            return null
+        }
+
+        val clipboardItem = primaryClipData.getItemAt(0)
+        return clipboardItem.text?.toString()
+    }
+
+    fun copyTextToClipboard(
+        context: Context,
+        text: String,
+    ) {
+        try {
+            val clipboard =
+                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Text", text)
+            clipboard.setPrimaryClip(clip)
+        } catch (e: Exception) {
+            throw FlutterError(
+                "COULD_NOT_COPY_TEXT_TO_CLIPBOARD",
+                "Unknown error while copying the text to the clipboard: ${e.message}",
+                e.toString(),
+            )
+        }
+    }
+
+    private const val MIME_TYPE_MARKDOWN = "text/markdown"
+
+    fun getClipboardMarkdown(context: Context): String? {
+        val clipboard =
+            context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        if (!clipboard.hasPrimaryClip()) {
+            return null
+        }
+
+        val primaryClipData = clipboard.primaryClip
+
+        if (primaryClipData == null || primaryClipData.itemCount == 0) {
+            return null
+        }
+
+        if (!primaryClipData.description.hasMimeType(MIME_TYPE_MARKDOWN)) {
+            return null
+        }
+
+        val clipboardItem = primaryClipData.getItemAt(0)
+        return clipboardItem.text?.toString()
+    }
+
+    fun copyMarkdownToClipboard(
+        context: Context,
+        markdown: String,
+    ) {
+        try {
+            val clipboard =
+                context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData(
+                ClipDescription("Markdown", arrayOf(MIME_TYPE_MARKDOWN)),
+                ClipData.Item(markdown)
+            )
+            clipboard.setPrimaryClip(clip)
+        } catch (e: Exception) {
+            throw FlutterError(
+                "COULD_NOT_COPY_MARKDOWN_TO_CLIPBOARD",
+                "Unknown error while copying the Markdown to the clipboard: ${e.message}",
+                e.toString(),
+            )
+        }
+    }
 }

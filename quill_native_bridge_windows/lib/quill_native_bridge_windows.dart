@@ -1,233 +1,453 @@
 // This file is referenced by pubspec.yaml. If you plan on moving this file
 // Make sure to update pubspec.yaml to the new location.
 
-import 'dart:ffi';
-import 'dart:io';
-
-import 'package:ffi/ffi.dart';
-import 'package:file_selector_platform_interface/file_selector_platform_interface.dart';
-import 'package:flutter/foundation.dart';
-import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
-import 'package:win32/win32.dart';
-
-import 'src/clipboard_html_format.dart';
-import 'src/html_cleaner.dart';
-import 'src/html_formatter.dart';
-import 'src/image_saver.dart';
+import "dart:ffi";
+import "package:ffi/ffi.dart";
+import "package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart";
+import "package:quill_native_bridge_windows/src/html_cleaner.dart";
+import "package:quill_native_bridge_windows/src/html_formatter.dart";
 
 /// A Windows implementation of the [QuillNativeBridgePlatform].
 ///
-/// **Highly Experimental** and subject to changes.
+/// Uses direct FFI bindings to Win32 APIs — no dependency on the `win32`
+/// package's Win32Result wrappers. Error handling follows the native
+/// Win32 convention: check the return value first, then [GetLastError]()
+/// only when needed.
 class QuillNativeBridgeWindows extends QuillNativeBridgePlatform {
+  QuillNativeBridgeWindows() {
+    _user32 = DynamicLibrary.open("user32.dll");
+    _kernel32 = DynamicLibrary.open("kernel32.dll");
+    _bindUser32Functions();
+    _bindKernel32Functions();
+  }
+
   static void registerWith() {
     QuillNativeBridgePlatform.instance = QuillNativeBridgeWindows();
   }
 
+  // ── DLL handles ──────────────────────────────────────────────────────
+
+  late final DynamicLibrary _user32;
+  late final DynamicLibrary _kernel32;
+
+  // ── User32 bindings ─────────────────────────────────────────────────
+
+  late final int Function(Pointer) _openClipboard;
+  late final int Function() _closeClipboard;
+  late final int Function() _emptyClipboard;
+  late final int Function(int) _isClipboardFormatAvailable;
+  late final Pointer Function(int) _getClipboardData;
+  late final Pointer Function(int, Pointer) _setClipboardData;
+  late final int Function(Pointer<Utf16>) _registerClipboardFormatW;
+  late final int Function() _getLastError;
+
+  void _bindUser32Functions() {
+    _openClipboard = _user32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("OpenClipboard");
+
+    _closeClipboard = _user32.lookupFunction<Int32 Function(), int Function()>("CloseClipboard");
+
+    _emptyClipboard = _user32.lookupFunction<Int32 Function(), int Function()>("EmptyClipboard");
+
+    _isClipboardFormatAvailable = _user32.lookupFunction<Int32 Function(Uint32), int Function(int)>("IsClipboardFormatAvailable");
+
+    _getClipboardData = _user32.lookupFunction<Pointer Function(Uint32), Pointer Function(int)>("GetClipboardData");
+
+    _setClipboardData = _user32.lookupFunction<Pointer Function(Uint32, Pointer), Pointer Function(int, Pointer)>("SetClipboardData");
+
+    _registerClipboardFormatW = _user32.lookupFunction<Uint32 Function(Pointer<Utf16>), int Function(Pointer<Utf16>)>("RegisterClipboardFormatW");
+
+    _getLastError = _user32.lookupFunction<Uint32 Function(), int Function()>("GetLastError");
+  }
+
+  // ── Kernel32 bindings ────────────────────────────────────────────────
+
+  late final Pointer Function(int, int) _globalAlloc;
+  late final Pointer Function(Pointer) _globalFree;
+  late final Pointer Function(Pointer) _globalLock;
+  late final int Function(Pointer) _globalUnlock;
+
+  void _bindKernel32Functions() {
+    _globalAlloc = _kernel32.lookupFunction<Pointer Function(Uint32, IntPtr), Pointer Function(int, int)>("GlobalAlloc");
+
+    _globalFree = _kernel32.lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>("GlobalFree");
+
+    _globalLock = _kernel32.lookupFunction<Pointer Function(Pointer), Pointer Function(Pointer)>("GlobalLock");
+
+    _globalUnlock = _kernel32.lookupFunction<Int32 Function(Pointer), int Function(Pointer)>("GlobalUnlock");
+  }
+
+  // ── Win32 constants ──────────────────────────────────────────────────
+
+  static const int _false = 0;
+  static const int _gmemMoveable = 0x0002;
+  static final Pointer _nullPointer = Pointer.fromAddress(0);
+
+  // ── HTML clipboard format registration ───────────────────────────────
+
+  /// Nom du format clipboard HTML tel que défini par Microsoft.
+  /// Voir https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format
+  static const String _htmlFormatName = "HTML Format";
+
+  int? _cfHtml;
+
+  /// Enregistre le format clipboard "HTML Format" une seule fois et le met en cache.
+  /// Réessaie si la précédente tentative a échoué (le cache null est réévaluable).
+  /// Retourne `null` si l'enregistrement échoue.
+  int? _registerHtmlClipboardFormat() {
+    final existing = _cfHtml;
+    if (existing != null) return existing;
+
+    final formatNamePtr = _htmlFormatName.toNativeUtf16(allocator: calloc);
+    try {
+      final formatId = _registerClipboardFormatW(formatNamePtr);
+      if (formatId == 0) return null;
+      _cfHtml = formatId;
+      return formatId;
+    } finally {
+      calloc.free(formatNamePtr);
+    }
+  }
+
+  // ── Platform interface ───────────────────────────────────────────────
+
   @override
   Future<bool> isSupported(QuillNativeBridgeFeature feature) async => {
-        QuillNativeBridgeFeature.getClipboardHtml,
-        QuillNativeBridgeFeature.copyHtmlToClipboard,
-        QuillNativeBridgeFeature.saveImage,
-      }.contains(feature);
+    QuillNativeBridgeFeature.getClipboardHtml,
+    QuillNativeBridgeFeature.copyHtmlToClipboard,
+    QuillNativeBridgeFeature.getClipboardText,
+    QuillNativeBridgeFeature.copyTextToClipboard,
+    QuillNativeBridgeFeature.getClipboardMarkdown,
+    QuillNativeBridgeFeature.copyMarkdownToClipboard,
+  }.contains(feature);
 
-  // TODO: Cleanup this code here
+  // ── Clipboard HTML read ───────────────────────────────────────────────
 
-  // TODO: Improve error handling by throwing exception
-  //  instead of using assert, should have a proper way of handling
-  //  errors regardless of this implementation.
-
-  // TODO: Test Clipboard operations with other windows apps and
-  //  see if this implementation causing issues
-
-  // TODO: Might extract low-level implementation of the clipboard outside of this class
-
-  /// Refer to [Windows GetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclipboarddata)
+  /// Lit le contenu HTML du presse-papiers Windows.
+  ///
+  /// Utilise l'API clipboard Win32 directement. Le format HTML est enregistré
+  /// une seule fois et mis en cache pour la durée de vie du processus.
+  ///
+  /// Voir [Windows GetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getclipboarddata)
   @override
   Future<String?> getClipboardHtml() async {
-    if (OpenClipboard(null) == FALSE) {
-      assert(
-        false,
-        'Unknown error while opening the clipboard. Error code: ${GetLastError()}',
-      );
+    if (_openClipboard(_nullPointer) == _false) {
+      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return null;
     }
 
     try {
-      final htmlFormatId = cfHtml;
-
+      final htmlFormatId = _registerHtmlClipboardFormat();
       if (htmlFormatId == null) {
-        assert(false, 'Failed to register clipboard HTML format.');
+        assert(false, "Échec d'enregistrement du format clipboard HTML.");
         return null;
       }
 
-      if (IsClipboardFormatAvailable(htmlFormatId) == FALSE) {
+      if (_isClipboardFormatAvailable(htmlFormatId) == _false) {
         return null;
       }
 
-      final clipboardDataHandle = GetClipboardData(htmlFormatId);
-      if (clipboardDataHandle == NULL) {
-        assert(
-          false,
-          'Failed to get clipboard data. Error code: ${GetLastError()}',
-        );
+      final clipboardDataHandle = _getClipboardData(htmlFormatId);
+      if (clipboardDataHandle == _nullPointer) {
+        assert(false, "Échec de lecture du clipboard. Erreur: ${_getLastError()}");
         return null;
       }
 
-      final clipboardDataPointer =
-          Pointer.fromAddress(clipboardDataHandle.value.address);
-      final lockedMemoryPointer = GlobalLock(HGLOBAL(clipboardDataPointer));
-      if (lockedMemoryPointer == nullptr) {
-        assert(
-          false,
-          'Failed to lock global memory. Error code: ${GetLastError()}',
-        );
+      final lockedPointer = _globalLock(clipboardDataHandle);
+      if (lockedPointer == _nullPointer) {
+        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
         return null;
       }
 
-      final windowsHtmlWithMetadata =
-          lockedMemoryPointer.value.cast<Utf8>().toDartString();
-      GlobalUnlock(HGLOBAL(clipboardDataPointer));
-
-      // Strip comments/headers at the start of the HTML as they can cause
-      // issues while parsing the HTML
-
-      final cleanedHtml =
-          stripWindowsHtmlDescriptionHeaders(windowsHtmlWithMetadata);
-
-      return cleanedHtml;
+      try {
+        final windowsHtmlWithMetadata = lockedPointer.cast<Utf8>().toDartString();
+        return stripWindowsHtmlDescriptionHeaders(windowsHtmlWithMetadata);
+      } finally {
+        _globalUnlock(clipboardDataHandle);
+      }
     } finally {
-      CloseClipboard();
+      _closeClipboard();
     }
   }
 
-  /// Refer to [Windows SetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setclipboarddata)
+  // ── Clipboard HTML write ─────────────────────────────────────────────
+
+  /// Copie du contenu HTML dans le presse-papiers Windows.
+  ///
+  /// Construit les en-têtes du format clipboard HTML Windows et écrit
+  /// le contenu combiné dans le clipboard.
+  ///
+  /// Voir [Windows SetClipboardData() docs](https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setclipboarddata)
   @override
   Future<void> copyHtmlToClipboard(String html) async {
-    if (OpenClipboard(null) == FALSE) {
-      assert(
-        false,
-        'Unknown error while opening the clipboard. Error code: ${GetLastError()}',
-      );
+    if (_openClipboard(_nullPointer) == _false) {
+      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
       return;
     }
 
     final windowsClipboardHtml = constructWindowsHtmlDescriptionHeaders(html);
-    final htmlPointer = windowsClipboardHtml.toNativeUtf8();
+    final htmlPointer = windowsClipboardHtml.toNativeUtf8(allocator: calloc);
 
     try {
-      if (EmptyClipboard() == FALSE) {
-        assert(
-          false,
-          'Failed to empty the clipboard. Error code: ${GetLastError()}',
-        );
+      if (_emptyClipboard() == _false) {
+        assert(false, "Échec de vidage du clipboard. Erreur: ${_getLastError()}");
         return;
       }
 
-      final htmlFormatId = cfHtml;
-
+      final htmlFormatId = _registerHtmlClipboardFormat();
       if (htmlFormatId == null) {
-        assert(
-          false,
-          'Failed to register clipboard HTML format. Error code: ${GetLastError()}',
-        );
+        assert(false, "Échec d'enregistrement du format HTML. Erreur: ${_getLastError()}");
         return;
       }
 
-      final unitSize = sizeOf<Uint8>();
-      final htmlSize = (htmlPointer.length + 1) * unitSize;
+      final htmlSize = (htmlPointer.length + 1) * sizeOf<Uint8>();
+      final clipboardMemoryHandle = _globalAlloc(_gmemMoveable, htmlSize);
 
-      final clipboardMemoryHandle = GlobalAlloc(GMEM_MOVEABLE, htmlSize);
-      if (clipboardMemoryHandle == nullptr ||
-          !clipboardMemoryHandle.error.isOk) {
-        assert(
-          false,
-          'Failed to allocate memory for the clipboard content. Error code: ${GetLastError()}',
-        );
+      if (clipboardMemoryHandle == _nullPointer) {
+        assert(false, "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}");
         return;
       }
 
-      final lockedMemoryPointer = GlobalLock(clipboardMemoryHandle.value);
-      if (lockedMemoryPointer == nullptr) {
-        GlobalFree(clipboardMemoryHandle.value);
-        assert(
-          false,
-          'Failed to lock global memory. Error code: ${GetLastError()}',
-        );
+      final lockedPointer = _globalLock(clipboardMemoryHandle);
+      if (lockedPointer == _nullPointer) {
+        _globalFree(clipboardMemoryHandle);
+        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
         return;
       }
-
-      final targetMemoryPointer = lockedMemoryPointer.value.cast<Uint8>();
 
       final sourcePointer = htmlPointer.cast<Uint8>();
+      final targetPointer = lockedPointer.cast<Uint8>();
 
-      // Copy HTML data byte by byte
+      // Copie octet par octet du contenu HTML
       for (var i = 0; i < htmlPointer.length; i++) {
-        targetMemoryPointer[i] = (sourcePointer + i).value;
+        targetPointer[i] = (sourcePointer + i).value;
       }
 
-      // Add a null terminator for HTML (necessary for proper string handling)
-      (targetMemoryPointer + htmlPointer.length).value = NULL;
+      // Terminateur nul
+      (targetPointer + htmlPointer.length).value = 0;
 
-      // According to Windows docs in https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setclipboarddata#parameters
-      // Should not call GlobalFree() when SetClipboardData() success
-      // as the Windows clipboard takes ownership of the memory.
+      _globalUnlock(clipboardMemoryHandle);
 
-      GlobalUnlock(clipboardMemoryHandle.value);
-
-      if (SetClipboardData(htmlFormatId, HANDLE(clipboardMemoryHandle.value)) ==
-          NULL) {
-        GlobalFree(clipboardMemoryHandle.value);
-        assert(
-          false,
-          'Failed to set the clipboard data: ${GetLastError()}',
-        );
+      final result = _setClipboardData(htmlFormatId, clipboardMemoryHandle);
+      if (result == _nullPointer) {
+        // Échec de SetClipboardData — on doit libérer la mémoire nous-mêmes
+        _globalFree(clipboardMemoryHandle);
+        assert(false, "Échec d'écriture dans le clipboard. Erreur: ${_getLastError()}");
       }
+      // Si SetClipboardData a réussi, Windows possède la mémoire — NE PAS libérer
     } finally {
-      CloseClipboard();
+      _closeClipboard();
       calloc.free(htmlPointer);
     }
   }
 
-  @visibleForTesting
-  static ImageSaver imageSaver = ImageSaver();
+  // ── Clipboard text read ──────────────────────────────────────────────
 
+  static const int _cfUnicodeText = 13;
+
+  /// Lit le texte brut du presse-papiers Windows.
   @override
-  Future<ImageSaveResult> saveImage(
-    Uint8List imageBytes, {
-    required ImageSaveOptions options,
-  }) async {
-    final typeGroup = XTypeGroup(
-      label: 'Images',
-      // Only `extensions` is supported on Windows. See https://pub.dev/packages/file_selector#filtering-by-file-types
-      extensions: [options.fileExtension],
-    );
-
-    final saveLocation = await imageSaver.fileSelector.getSaveLocation(
-      options: SaveDialogOptions(
-        suggestedName: '${options.name}.${options.fileExtension}',
-        initialDirectory: imageSaver.picturesDirectoryPath,
-      ),
-      acceptedTypeGroups: [typeGroup],
-    );
-    final imageFilePath = saveLocation?.path;
-    if (imageFilePath == null) {
-      return ImageSaveResult.io(filePath: null);
+  Future<String?> getClipboardText() async {
+    if (_openClipboard(_nullPointer) == _false) {
+      return null;
     }
-    final imageFile = File(imageFilePath);
-    await imageFile.writeAsBytes(imageBytes);
-
-    return ImageSaveResult.io(filePath: imageFile.path);
+    try {
+      if (_isClipboardFormatAvailable(_cfUnicodeText) == _false) {
+        return null;
+      }
+      final clipboardDataHandle = _getClipboardData(_cfUnicodeText);
+      if (clipboardDataHandle == _nullPointer) {
+        return null;
+      }
+      final lockedPointer = _globalLock(clipboardDataHandle);
+      if (lockedPointer == _nullPointer) {
+        return null;
+      }
+      try {
+        return lockedPointer.cast<Utf16>().toDartString();
+      } finally {
+        _globalUnlock(clipboardDataHandle);
+      }
+    } finally {
+      _closeClipboard();
+    }
   }
 
+  // ── Clipboard text write ─────────────────────────────────────────────
+
+  /// Copie du texte brut dans le presse-papiers Windows.
   @override
-  Future<void> openGalleryApp() async {
-    final uriPtr = 'ms-photos:'.toPcwstr();
-    final openPtr = 'open'.toPcwstr();
+  Future<void> copyTextToClipboard(String text) async {
+    if (_openClipboard(_nullPointer) == _false) {
+      return;
+    }
+    final textPointer = text.toNativeUtf16(allocator: calloc);
+    try {
+      if (_emptyClipboard() == _false) {
+        return;
+      }
+      final textSize = (textPointer.length + 1) * 2;
+      final clipboardMemoryHandle = _globalAlloc(_gmemMoveable, textSize);
+      if (clipboardMemoryHandle == _nullPointer) {
+        return;
+      }
+      final lockedPointer = _globalLock(clipboardMemoryHandle);
+      if (lockedPointer == _nullPointer) {
+        _globalFree(clipboardMemoryHandle);
+        return;
+      }
+      final sourcePointer = textPointer.cast<Uint8>();
+      final targetPointer = lockedPointer.cast<Uint8>();
+      for (var i = 0; i < textSize; i++) {
+        targetPointer[i] = (sourcePointer + i).value;
+      }
+      _globalUnlock(clipboardMemoryHandle);
+      final result = _setClipboardData(_cfUnicodeText, clipboardMemoryHandle);
+      if (result == _nullPointer) {
+        _globalFree(clipboardMemoryHandle);
+      }
+    } finally {
+      _closeClipboard();
+      calloc.free(textPointer);
+    }
+  }
 
-    ShellExecute(
-        null, openPtr, uriPtr, PCWSTR(nullptr), PCWSTR(nullptr), SW_SHOWNORMAL);
+  // ── Clipboard Markdown format registration ───────────────────────────
 
-    free(uriPtr);
-    free(openPtr);
+  /// Nom du format clipboard Markdown tel qu'enregistré par VS Code, Obsidian, etc.
+  static const String _markdownFormatName = "text/markdown";
+
+  int? _cfMarkdown;
+
+  /// Enregistre le format clipboard "text/markdown" une seule fois et le met en cache.
+  /// Réessaie si la précédente tentative a échoué (le cache null est réévaluable).
+  /// Retourne `null` si l'enregistrement échoue.
+  int? _registerMarkdownClipboardFormat() {
+    final existing = _cfMarkdown;
+    if (existing != null) return existing;
+
+    final formatNamePtr = _markdownFormatName.toNativeUtf16(allocator: calloc);
+    try {
+      final formatId = _registerClipboardFormatW(formatNamePtr);
+      if (formatId == 0) return null;
+      _cfMarkdown = formatId;
+      return formatId;
+    } finally {
+      calloc.free(formatNamePtr);
+    }
+  }
+
+  // ── Clipboard Markdown read ──────────────────────────────────────────
+
+  /// Lit le contenu Markdown du presse-papiers Windows.
+  ///
+  /// Utilise le format clipboard "text/markdown" (même format que VS Code, Obsidian).
+  /// Le contenu est stocké en UTF-8 sans en-têtes — texte brut uniquement.
+  @override
+  Future<String?> getClipboardMarkdown() async {
+    if (_openClipboard(_nullPointer) == _false) {
+      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      return null;
+    }
+
+    try {
+      final markdownFormatId = _registerMarkdownClipboardFormat();
+      if (markdownFormatId == null) {
+        assert(false, "Échec d'enregistrement du format clipboard Markdown.");
+        return null;
+      }
+
+      if (_isClipboardFormatAvailable(markdownFormatId) == _false) {
+        return null;
+      }
+
+      final clipboardDataHandle = _getClipboardData(markdownFormatId);
+      if (clipboardDataHandle == _nullPointer) {
+        assert(false, "Échec de lecture du clipboard Markdown. Erreur: ${_getLastError()}");
+        return null;
+      }
+
+      final lockedPointer = _globalLock(clipboardDataHandle);
+      if (lockedPointer == _nullPointer) {
+        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        return null;
+      }
+
+      try {
+        // Le format text/markdown est stocké en UTF-8 (comme le format HTML)
+        return lockedPointer.cast<Utf8>().toDartString();
+      } finally {
+        _globalUnlock(clipboardDataHandle);
+      }
+    } finally {
+      _closeClipboard();
+    }
+  }
+
+  // ── Clipboard Markdown write ─────────────────────────────────────────
+
+  /// Copie du contenu Markdown dans le presse-papiers Windows.
+  ///
+  /// Écrit le Markdown dans le format "text/markdown" (UTF-8, sans en-têtes).
+  /// Contrairement au HTML, pas de construction d'en-têtes — texte brut uniquement.
+  @override
+  Future<void> copyMarkdownToClipboard(String markdown) async {
+    if (_openClipboard(_nullPointer) == _false) {
+      assert(false, "Échec d'ouverture du clipboard. Erreur: ${_getLastError()}");
+      return;
+    }
+
+    final markdownPointer = markdown.toNativeUtf8(allocator: calloc);
+
+    try {
+      if (_emptyClipboard() == _false) {
+        assert(false, "Échec de vidage du clipboard. Erreur: ${_getLastError()}");
+        return;
+      }
+
+      final markdownFormatId = _registerMarkdownClipboardFormat();
+      if (markdownFormatId == null) {
+        assert(false, "Échec d'enregistrement du format Markdown. Erreur: ${_getLastError()}");
+        return;
+      }
+
+      final markdownSize = (markdownPointer.length + 1) * sizeOf<Uint8>();
+      final clipboardMemoryHandle = _globalAlloc(_gmemMoveable, markdownSize);
+
+      if (clipboardMemoryHandle == _nullPointer) {
+        assert(false, "Échec d'allocation mémoire pour le clipboard. Erreur: ${_getLastError()}");
+        return;
+      }
+
+      final lockedPointer = _globalLock(clipboardMemoryHandle);
+      if (lockedPointer == _nullPointer) {
+        _globalFree(clipboardMemoryHandle);
+        assert(false, "Échec de verrouillage mémoire globale. Erreur: ${_getLastError()}");
+        return;
+      }
+
+      final sourcePointer = markdownPointer.cast<Uint8>();
+      final targetPointer = lockedPointer.cast<Uint8>();
+
+      // Copie octet par octet du contenu Markdown
+      for (var i = 0; i < markdownPointer.length; i++) {
+        targetPointer[i] = (sourcePointer + i).value;
+      }
+
+      // Terminateur nul
+      (targetPointer + markdownPointer.length).value = 0;
+
+      _globalUnlock(clipboardMemoryHandle);
+
+      final result = _setClipboardData(markdownFormatId, clipboardMemoryHandle);
+      if (result == _nullPointer) {
+        // Échec de SetClipboardData — on doit libérer la mémoire nous-mêmes
+        _globalFree(clipboardMemoryHandle);
+        assert(false, "Échec d'écriture Markdown dans le clipboard. Erreur: ${_getLastError()}");
+      }
+      // Si SetClipboardData a réussi, Windows possède la mémoire — NE PAS libérer
+    } finally {
+      _closeClipboard();
+      calloc.free(markdownPointer);
+    }
   }
 }

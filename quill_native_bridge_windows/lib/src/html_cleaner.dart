@@ -1,40 +1,20 @@
-// Used to clean and remove HTML description headers
-// when retrieving HTML from the windows clipboard which are
-// usually not needed and can cause issues when parsing the HTML.
+// Supprime les en-têtes de description du format clipboard HTML Windows.
+//
+// Le format clipboard HTML de Windows inclut des métadonnées avant le contenu HTML :
+// Version, StartHTML, EndHTML, StartFragment, EndFragment, etc.
+// Ces en-têtes ne sont pas du HTML valide et doivent être retirés pour le parsing.
+//
+// Voir [HTML Clipboard Format](https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format)
 
-/// See [HTML Clipboard Description Headers](https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format#description-headers-and-offsets)
-/// for more details.
-const _kWindowsDescriptionHeaders = {
-  'Version',
-  'StartHTML',
-  'EndHTML',
-  'StartFragment',
-  'EndFragment',
-  'StartSelection',
-  'EndSelection'
-};
+/// Noms des clés d'en-tête du format clipboard HTML Windows.
+const _kWindowsDescriptionHeaders = {"Version", "StartHTML", "EndHTML", "StartFragment", "EndFragment", "StartSelection", "EndSelection"};
 
-/// Remove the leading description headers from Windows clipboard HTML.
+/// Supprime les en-têtes de description Windows du HTML du clipboard.
 ///
-/// This function targets specific metadata keys that precede the actual HTML content:
-/// - `Version`
-/// - `StartHTML`
-/// - `EndHTML`
-/// - `StartFragment`
-/// - `EndFragment`
-/// - `StartSelection`
-/// - `EndSelection`
+/// Les en-têtes comme `Version:0.9`, `StartHTML:0000000105`, etc. précèdent
+/// le contenu HTML réel et doivent être retirés pour un parsing correct.
 ///
-/// These keys are not valid HTML and should be removed for proper parsing.
-///
-/// This function assumes that the metadata block appears before
-/// the actual HTML content and that it's formatted consistently with keys
-/// followed by values.
-///
-/// [html] The HTML content retrieved from the clipboard, which includes the metadata.
-///
-/// Example of the original (dirty) HTML:
-///
+/// Exemple d'entrée :
 /// ```html
 /// Version:0.9
 /// StartHTML:0000000105
@@ -48,29 +28,28 @@ const _kWindowsDescriptionHeaders = {
 /// </html>
 /// ```
 ///
-/// Refer to [HTML Clipboard Format](https://docs.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format)
-/// for details.
+/// Retourne le HTML nettoyé sans les en-têtes de description.
 String stripWindowsHtmlDescriptionHeaders(String html) {
-  // TODO: Using string indices can be more efficient and more minimal
-  //  to implement using index indexOf() and substring()
-  // Can contains dirty lines
-  final lines = html.split('\n');
-
-  final cleanedLines = [...lines];
+  final lines = html.split("\n");
+  final cleanedLines = <String>[];
 
   for (final line in lines) {
-    // Stop processing when reaching the start of actual HTML content
-    if (line.toLowerCase().startsWith('<html>')) {
+    // Arrêt dès qu'on atteint le contenu HTML réel
+    if (line.toLowerCase().startsWith("<html>")) {
+      cleanedLines.add(line);
+      // Ajouter les lignes restantes telles quelles
+      final remainingIndex = lines.indexOf(line) + 1;
+      if (remainingIndex < lines.length) {
+        cleanedLines.addAll(lines.sublist(remainingIndex));
+      }
       break;
     }
 
-    final isWindowsHtmlDescriptionHeader = _kWindowsDescriptionHeaders
-        .any((metadataKey) => line.startsWith('$metadataKey:'));
-    if (isWindowsHtmlDescriptionHeader) {
-      cleanedLines.remove(line);
-      continue;
+    final isWindowsHeader = _kWindowsDescriptionHeaders.any((metadataKey) => line.startsWith("$metadataKey:"));
+    if (!isWindowsHeader) {
+      cleanedLines.add(line);
     }
   }
 
-  return cleanedLines.join('\n');
+  return cleanedLines.join("\n");
 }

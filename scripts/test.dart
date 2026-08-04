@@ -1,13 +1,10 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
-
+import 'package:flutter/foundation.dart';
 import 'packages.dart';
 
 void main(List<String> args) {
   for (final package in packages) {
-    final result =
-        Process.runSync('flutter', ['test'], workingDirectory: package);
-    print(result.stdout);
+    final result = Process.runSync('flutter', ['test'], workingDirectory: package);
+    debugPrint(result.stdout.toString());
   }
 }

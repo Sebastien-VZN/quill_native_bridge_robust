@@ -3,14 +3,11 @@
 
 import 'dart:js_interop';
 
-import 'package:flutter/foundation.dart' show Uint8List, debugPrint;
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:quill_native_bridge_platform_interface/internal.dart';
 import 'package:quill_native_bridge_platform_interface/quill_native_bridge_platform_interface.dart';
+import 'package:quill_native_bridge_web/src/clipboard_api_support_unsafe.dart';
+import 'package:quill_native_bridge_web/src/mime_types_constants.dart';
 import 'package:web/web.dart';
-
-import 'src/clipboard_api_support_unsafe.dart';
-import 'src/mime_types_constants.dart';
 
 /// A web implementation of the [QuillNativeBridgePlatform].
 class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
@@ -25,26 +22,16 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
         return false;
       case QuillNativeBridgeFeature.getClipboardHtml:
       case QuillNativeBridgeFeature.copyHtmlToClipboard:
-      case QuillNativeBridgeFeature.copyImageToClipboard:
-      case QuillNativeBridgeFeature.getClipboardImage:
         return isClipboardApiSupported;
-      case QuillNativeBridgeFeature.getClipboardGif:
-        return false;
-      case QuillNativeBridgeFeature.getClipboardFiles:
-        return false;
-      case QuillNativeBridgeFeature.openGalleryApp:
-      case QuillNativeBridgeFeature.saveImageToGallery:
-        return false;
-      case QuillNativeBridgeFeature.saveImage:
+      case QuillNativeBridgeFeature.getClipboardText:
+      case QuillNativeBridgeFeature.copyTextToClipboard:
         return true;
+      case QuillNativeBridgeFeature.getClipboardMarkdown:
+      case QuillNativeBridgeFeature.copyMarkdownToClipboard:
+        return isClipboardApiSupported;
       case QuillNativeBridgeFeature.isAppleSafari:
         return true;
     }
-    // Without this default, adding a new item to the enum will be a breaking change.
-    // ignore: dead_code
-    throw UnimplementedError(
-      'Checking if `${feature.name}` is supported on the web is not covered.',
-    );
   }
 
   @override
@@ -56,8 +43,7 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
         'Should fallback to Clipboard events.',
       );
     }
-    final clipboardItems =
-        (await window.navigator.clipboard.read().toDart).toDart;
+    final clipboardItems = (await window.navigator.clipboard.read().toDart).toDart;
     for (final item in clipboardItems) {
       if (item.types.toDart.contains(kHtmlMimeType.toJS)) {
         final html = await item.getType(kHtmlMimeType).toDart;
@@ -77,89 +63,20 @@ class QuillNativeBridgeWeb extends QuillNativeBridgePlatform {
       );
     }
     final blob = Blob([html.toJS].toJS, BlobPropertyBag(type: kHtmlMimeType));
-    final clipboardItem = ClipboardItem(
-      {kHtmlMimeType.toJS: blob}.jsify() as JSObject,
-    );
+    final clipboardItem = ClipboardItem({kHtmlMimeType.toJS: blob}.jsify()! as JSObject);
     await window.navigator.clipboard.write([clipboardItem].toJS).toDart;
   }
 
   @override
-  Future<void> copyImageToClipboard(Uint8List imageBytes) async {
-    if (isClipbaordApiUnsupported) {
-      throw UnsupportedError(
-        'Could not copy image to the clipboard.\n'
-        'The Clipboard API is not supported on ${window.navigator.userAgent}.\n'
-        'Should fallback to Clipboard events.',
-      );
-    }
-    final blob = Blob(
-      [imageBytes.toJS].toJS,
-      BlobPropertyBag(type: kImagePngMimeType),
-    );
-
-    final clipboardItem = ClipboardItem(
-      {kImagePngMimeType.toJS: blob}.jsify() as JSObject,
-    );
-
-    await window.navigator.clipboard.write([clipboardItem].toJS).toDart;
+  Future<String?> getClipboardText() async {
+    final jsText = await window.navigator.clipboard.readText().toDart;
+    final text = jsText.toDart;
+    return text.isEmpty ? null : text;
   }
 
   @override
-  Future<Uint8List?> getClipboardImage() async {
-    if (isClipbaordApiUnsupported) {
-      throw UnsupportedError(
-        'Could not retrieve image from the clipboard.\n'
-        'The Clipboard API is not supported on ${window.navigator.userAgent}.\n'
-        'Should fallback to Clipboard events.',
-      );
-    }
-    final clipboardItems =
-        (await window.navigator.clipboard.read().toDart).toDart;
-    for (final item in clipboardItems) {
-      if (item.types.toDart.contains(kImagePngMimeType.toJS)) {
-        final blob = await item.getType(kImagePngMimeType).toDart;
-        final arrayBuffer = await blob.arrayBuffer().toDart;
-        return arrayBuffer.toDart.asUint8List();
-      }
-    }
-    return null;
-  }
-
-  @override
-  Future<Uint8List?> getClipboardGif() {
-    assert(() {
-      debugPrint(
-        'Retrieving gif image from the clipboard is unsupported regardless of the browser.\n'
-        'Refer to https://github.com/singerdmx/flutter-quill/issues/2229 for discussion.',
-      );
-      return true;
-    }());
-    throw UnsupportedError(
-      'Retrieving gif image from the clipboard is unsupported regardless of the browser.',
-    );
-  }
-
-  @override
-  Future<ImageSaveResult> saveImage(
-    Uint8List imageBytes, {
-    required ImageSaveOptions options,
-  }) async {
-    final blob = Blob(
-      [imageBytes.toJS].toJS,
-      BlobPropertyBag(type: getImageMimeType(options.fileExtension)),
-    );
-    final url = URL.createObjectURL(blob);
-
-    final link = HTMLAnchorElement();
-    link.setAttribute('href', url);
-    link.setAttribute(
-        'download', '${options.fileExtension}.${options.fileExtension}');
-
-    link.click();
-
-    URL.revokeObjectURL(url);
-
-    return ImageSaveResult.web(blobUrl: url);
+  Future<void> copyTextToClipboard(String text) async {
+    await window.navigator.clipboard.writeText(text).toDart;
   }
 
   // https://github.com/flutter/packages/blob/main/packages/cross_file/lib/src/web_helpers/web_helpers.dart#L35-L37

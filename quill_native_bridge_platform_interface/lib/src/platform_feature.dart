@@ -3,12 +3,9 @@ enum QuillNativeBridgeFeature {
   isIOSSimulator,
   getClipboardHtml,
   copyHtmlToClipboard,
-  copyImageToClipboard,
-  getClipboardImage,
-  getClipboardGif,
-  getClipboardFiles,
-  openGalleryApp,
-  saveImageToGallery,
-  saveImage,
-  isAppleSafari;
+  getClipboardText,
+  copyTextToClipboard,
+  getClipboardMarkdown,
+  copyMarkdownToClipboard,
+  isAppleSafari,
 }

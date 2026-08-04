@@ -1,8 +1,7 @@
-// ignore_for_file: avoid_print
-
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 void main(List<String> args) {
   final result = Process.runSync('ktlint', ['--format']);
-  print(result.stdout);
+  debugPrint(result.stdout.toString());
 }
