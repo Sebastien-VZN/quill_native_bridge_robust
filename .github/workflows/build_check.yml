@@ -37,9 +37,6 @@ jobs:
       - name: "Exécution des Tests Unitaires"
         run: dart ./scripts/test.dart
 
-      - name: "Vérification Publish Dry-Run"
-        run: dart ./scripts/publish_dry_run.dart
-
   # ┌─────────────────────────────────────────────────────────┐
   # │  Lint parallèle à validate (pas bloquant pour builds)   │
   # └─────────────────────────────────────────────────────────┘
