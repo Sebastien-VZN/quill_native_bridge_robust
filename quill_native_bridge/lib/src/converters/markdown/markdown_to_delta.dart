@@ -87,7 +87,7 @@ class MarkdownToDelta implements md.NodeVisitor {
       case "p":
         break;
       case "br":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
       case "hr":
         // Horizontal rule — not supported (media)
         break;
@@ -114,22 +114,22 @@ class MarkdownToDelta implements md.NodeVisitor {
       case "a":
         _popAttribute();
       case "blockquote":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "h1":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "h2":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "h3":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "pre":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "li":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
         _popAttribute();
       case "ul":
         if (_isOrderedListStack.isNotEmpty) {
@@ -140,7 +140,7 @@ class MarkdownToDelta implements md.NodeVisitor {
           _isOrderedListStack.removeLast();
         }
       case "p":
-        _delta.insert("\n", _currentAttributes());
+        _delta.insert("\n", attributes: _currentAttributes());
     }
   }
 
@@ -149,7 +149,7 @@ class MarkdownToDelta implements md.NodeVisitor {
     final content = text.text;
     if (content.isEmpty) return;
 
-    _delta.insert(content, _currentAttributes());
+    _delta.insert(content, attributes: _currentAttributes());
   }
 
   // ---------------------------------------------------------------
