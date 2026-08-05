@@ -14,12 +14,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  dart_quill_delta: ^10.0.0
+  dart_quill_delta:
+    git:
+      url: https://github.com/Sebastien-VZN/dart_quill_delta_robust.git
   html: ^0.15.0
   markdown: ^7.1.0
   collection: ^1.17.0
   charcode: ^1.3.0
-  flutter_quill_delta_from_html: ^1.5.3
+  flutter_quill_delta_from_html:
+    git:
+      url: https://github.com/Sebastien-VZN/flutter_quill_delta_from_html_robust.git
   quill_native_bridge_android:
     path: ../quill_native_bridge_android
   quill_native_bridge_platform_interface:
