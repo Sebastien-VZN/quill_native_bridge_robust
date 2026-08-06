@@ -2,6 +2,28 @@
 
 All notable changes to this project will be documented in this file.
 
+### [Unreleased]
+
+#### Added
+
+- **Markdown clipboard support** — `copyMarkdownToClipboard()` implemented and tested on all supported platforms (Android, Windows, Linux). Complements the existing `getClipboardMarkdown()` read path.
+- **Unit tests** — Added comprehensive test coverage for `copyMarkdownToClipboard` and related clipboard operations.
+
+#### Fixed
+
+- **HTML clipboard cleaner** — Strips the non-standard `SourceURL:` header emitted by apps like GitLab, VS Code and Edge, preventing it from appearing as visible text at the start of pasted content.
+- **iOS/macOS build** — Fixed Swift implementation in `QuillNativeBridgeImpl.swift` for both platforms.
+- **Windows FFI tests** — Added `@TestOn('windows')` annotation to prevent silent skips on Linux CI runners.
+- **Fork source** — Corrected git dependency references to point to the robust fork repositories.
+- **Converter dependencies** — Fixed `markdown_to_delta.dart` dependency issues.
+- **Android build tooling** — Updated AGP (Android Gradle Plugin) and Gradle wrapper to latest stable versions.
+- **Workspace overrides** — Forced `dart_quill_delta` and `flutter_quill_delta_from_html` to use fork git sources via workspace overrides, ensuring consistent dependency resolution.
+
+#### Changed
+
+- **Version bump** — 11.3.1 → 11.4.0.
+- **Documentation** — General formatting improvements and script additions for repository maintenance.
+
 ### 11.2.0
 
 - Updates the minimum supported SDK version to Flutter 3.44/Dart 3.12.

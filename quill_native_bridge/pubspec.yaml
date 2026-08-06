@@ -1,6 +1,6 @@
 name: quill_native_bridge
 description: "An internal Flutter plugin for flutter_quill package to access platform-specific APIs"
-version: 11.3.1
+version: 11.4.0
 homepage: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 repository: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 issue_tracker: https://github.com/Sebastien-VZN/quill_native_bridge_robust/issues
