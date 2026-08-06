@@ -31,3 +31,11 @@ build/
 # iOS and macOS dependencies
 .build/
 .swiftpm/
+macos/Flutter/ephemeral/Flutter-Generated.xcconfig
+macos/Flutter/ephemeral/flutter_native_integration.env
+macos/Flutter/ephemeral/flutter_export_environment.sh
+ios/Flutter/ephemeral/flutter_native_integration.env
+ios/Flutter/ephemeral/flutter_lldbinit
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/flutter_lldb_helper.py
+ios/Flutter/flutter_export_environment.sh
