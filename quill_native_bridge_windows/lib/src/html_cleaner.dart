@@ -7,12 +7,25 @@
 // Voir [HTML Clipboard Format](https://learn.microsoft.com/en-us/windows/win32/dataxchg/html-clipboard-format)
 
 /// Noms des clés d'en-tête du format clipboard HTML Windows.
-const _kWindowsDescriptionHeaders = {"Version", "StartHTML", "EndHTML", "StartFragment", "EndFragment", "StartSelection", "EndSelection"};
+///
+/// `SourceURL` n'est pas dans la spec Microsoft de base, mais est un en-tête
+/// non-standard émis par certaines applications (GitLab, VS Code, Edge...) et
+/// doit être retiré comme les autres, sinon il est parsé comme du texte.
+const _kWindowsDescriptionHeaders = {
+  "Version",
+  "StartHTML",
+  "EndHTML",
+  "StartFragment",
+  "EndFragment",
+  "StartSelection",
+  "EndSelection",
+  "SourceURL",
+};
 
 /// Supprime les en-têtes de description Windows du HTML du clipboard.
 ///
-/// Les en-têtes comme `Version:0.9`, `StartHTML:0000000105`, etc. précèdent
-/// le contenu HTML réel et doivent être retirés pour un parsing correct.
+/// Les en-têtes comme `Version:0.9`, `StartHTML:0000000105`, `SourceURL:...`, etc.
+/// précèdent le contenu HTML réel et doivent être retirés pour un parsing correct.
 ///
 /// Exemple d'entrée :
 /// ```html

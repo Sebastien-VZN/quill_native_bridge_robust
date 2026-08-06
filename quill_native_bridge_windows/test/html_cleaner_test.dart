@@ -39,5 +39,32 @@ EndFragment:0000000598
 
       expect(stripWindowsHtmlDescriptionHeaders(cleanHtml), equals(cleanHtml));
     });
+
+    test('should strip SourceURL header emitted by apps like GitLab and VS Code', () {
+      const htmlWithSourceUrl = '''
+SourceURL:https://git.quantive-studio.xyz/seb/axomind_client_app
+Version:1.0
+StartHTML:0000000097
+EndHTML:0000000412
+StartFragment:0000000133
+EndFragment:0000000376
+<html>
+<body>
+<!--StartFragment--><div>Copied from GitLab</div><!--EndFragment-->
+</body>
+</html>
+''';
+      const expectedHtml = '''
+<html>
+<body>
+<!--StartFragment--><div>Copied from GitLab</div><!--EndFragment-->
+</body>
+</html>
+''';
+      final strippedHtml = stripWindowsHtmlDescriptionHeaders(htmlWithSourceUrl);
+      expect(strippedHtml.contains('SourceURL'), isFalse, reason: 'SourceURL must not reach the HTML parser');
+      expect(strippedHtml, expectedHtml);
+      expect(strippedHtml.trim(), startsWith('<html>'));
+    });
   });
 }
