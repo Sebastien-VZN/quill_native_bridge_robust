@@ -4,6 +4,8 @@ All notable changes to this project will be documented in this file.
 
 ### [Unreleased]
 
+### 11.4.1
+
 #### Added
 
 - **Markdown clipboard support** — `copyMarkdownToClipboard()` implemented and tested on all supported platforms (Android, Windows, Linux). Complements the existing `getClipboardMarkdown()` read path.
@@ -16,12 +18,12 @@ All notable changes to this project will be documented in this file.
 - **Windows FFI tests** — Added `@TestOn('windows')` annotation to prevent silent skips on Linux CI runners.
 - **Fork source** — Corrected git dependency references to point to the robust fork repositories.
 - **Converter dependencies** — Fixed `markdown_to_delta.dart` dependency issues.
-- **Android build tooling** — Updated AGP (Android Gradle Plugin) and Gradle wrapper to latest stable versions.
+- **Android build tooling** — Aligned example app to the Flutter 3.47.1 dependency matrix (AGP `9.1.0`, KGP `2.4.0`, Gradle `9.3.1`). Removed `kotlin-android` plugin from the example app (Flutter Gradle plugin handles Kotlin on AGP 9). Removed `suppressAgpWarnings` workaround.
 - **Workspace overrides** — Forced `dart_quill_delta` and `flutter_quill_delta_from_html` to use fork git sources via workspace overrides, ensuring consistent dependency resolution.
 
 #### Changed
 
-- **Version bump** — 11.3.1 → 11.4.0.
+- **Version bump** — 11.3.1 → 11.4.0 → 11.4.1.
 - **Documentation** — General formatting improvements and script additions for repository maintenance.
 
 ### 11.2.0

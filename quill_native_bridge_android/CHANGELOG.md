@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.2.1
+
+- Aligned to the Flutter 3.47.1 Android dependency matrix: AGP `9.3.1` -> `9.1.0`, Kotlin Gradle Plugin `2.3.10` -> `2.4.0`, Gradle wrapper `9.6.1` -> `9.3.1`.
+- Removed AGP and `kotlin-gradle-plugin` classpath entries from the plugin `buildscript` block — the host app provides them via `settings.gradle.kts` and the Flutter plugin loader. This keeps the plugin consumable by apps on AGP 8 as well as AGP 9.
+- Removed the `android.sync.suppressAgpWarnings` workaround from `gradle.properties` — no longer needed on AGP 9.1.0.
+- Verified clean build with `flutter build apk --debug`: no Gradle, AGP, Kotlin, or KGP warnings.
+
 ## 0.0.2
 
 - Updates the minimum supported SDK version to Flutter 3.44/Dart 3.12.

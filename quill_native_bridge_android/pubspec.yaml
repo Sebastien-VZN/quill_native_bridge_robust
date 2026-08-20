@@ -1,6 +1,6 @@
 name: quill_native_bridge_android
 description: "Android implementation of the quill_native_bridge plugin."
-version: 0.2.0
+version: 0.2.1
 homepage: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 repository: https://github.com/Sebastien-VZN/quill_native_bridge_robust
 issue_tracker: https://github.com/Sebastien-VZN/quill_native_bridge_robust/issues
