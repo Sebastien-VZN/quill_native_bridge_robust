@@ -42,7 +42,7 @@ EndFragment:0000000598
 
     test('should strip SourceURL header emitted by apps like GitLab and VS Code', () {
       const htmlWithSourceUrl = '''
-SourceURL:https://git.quantive-studio.xyz/seb/axomind_client_app
+SourceURL:https://git.quantive-studio.fr/seb/axomind_client_app
 Version:1.0
 StartHTML:0000000097
 EndHTML:0000000412
