@@ -12,7 +12,7 @@ void main() {
 
   test('isIOSSimulator is not applicable on macOS', () async {
     final plugin = QuillNativeBridgeMacOS();
-    expect(() async => plugin.isIOSSimulator(), throwsUnsupportedError);
+    expect(() async => await plugin.isIOSSimulator(), throwsUnsupportedError);
   });
 
   group('isSupported', () {
