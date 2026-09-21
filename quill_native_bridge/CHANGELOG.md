@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 
 ### [Unreleased]
 
+### 11.4.2
+- Update package flutter
+
 ### 11.4.1
 
 #### Added
